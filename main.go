@@ -5,11 +5,23 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"os"
 
 	"git.sr.ht/~kota/hex/ui"
 )
 
-func home(w http.ResponseWriter, r *http.Request) {
+type application struct {
+	infoLog *log.Logger
+	errLog  *log.Logger
+}
+
+func (app *application) routes() http.Handler {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/", app.home)
+	return mux
+}
+
+func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	ts, err := template.ParseFS(ui.EFS, "main.tmpl")
 	if err != nil {
 		log.Println(err)
@@ -36,10 +48,21 @@ func main() {
 	addr := flag.String("addr", ":4000", "HTTP network address")
 	flag.Parse()
 
-	mux := http.NewServeMux()
-	mux.HandleFunc("/", home)
+	infoLog := log.New(os.Stdout, "INFO ", log.Ldate|log.Ltime)
+	errLog := log.New(os.Stderr, "ERROR ", log.Ldate|log.Ltime|log.Lshortfile)
 
-	log.Println("starting server on", *addr)
-	err := http.ListenAndServe(*addr, mux)
-	log.Fatal(err)
+	app := &application{
+		infoLog: infoLog,
+		errLog:  errLog,
+	}
+
+	srv := &http.Server{
+		Addr:     *addr,
+		ErrorLog: errLog,
+		Handler:  app.routes(),
+	}
+
+	infoLog.Println("starting server on", *addr)
+	err := srv.ListenAndServe()
+	errLog.Fatal(err)
 }
