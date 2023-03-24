@@ -8,20 +8,44 @@
 		--ratio: 1.5;
 		--s0: 1rem;
 		--s1: calc(var(--s0) * var(--ratio));
+		--s2: calc(var(--s1) * var(--ratio));
+		--s3: calc(var(--s2) * var(--ratio));
+		--s4: calc(var(--s3) * var(--ratio));
 	}
-	* {
-		box-sizing: border-box;
+	*,
+	:after,
+	:before {
+		box-sizing:border-box;
+		font-family:inherit;
+		overflow-wrap:break-word;
+		margin:0;
+		padding:0;
+		border:0 solid
 	}
-	body {
+	main {
 		box-sizing: content-box;
 		max-inline-size: 60ch;
 		margin-inline: auto;
 		padding-inline-start: var(--s1);
 		padding-inline-end: var(--s1);
+		font-family: system-ui, sans-serif;
+	}
+	.posts {
+		padding: 0;
+		list-style-type: none;
+	}
+	.posts > * + * {
+		margin-block-start: var(--s1);
 	}
 	</style>
 </head>
 <body>
-	{{.}}
+	<main>
+		<ol class="posts">
+		{{ range .Posts }}
+			<li><a href="{{.URL}}">{{.Name}}</a></li>
+		{{ end }}
+		</ol>
+	</main>
 </body>
 </html>

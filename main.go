@@ -1,18 +1,22 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"html/template"
 	"log"
 	"net/http"
 	"os"
 
+	"git.sr.ht/~kota/hex/hb"
 	"git.sr.ht/~kota/hex/ui"
 )
 
 type application struct {
 	infoLog *log.Logger
 	errLog  *log.Logger
+
+	posts *hb.PostsResponse
 }
 
 func (app *application) routes() http.Handler {
@@ -33,7 +37,7 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = ts.Execute(w, "hello world")
+	err = ts.Execute(w, app.posts)
 	if err != nil {
 		log.Println(err)
 		http.Error(
@@ -51,9 +55,20 @@ func main() {
 	infoLog := log.New(os.Stdout, "INFO ", log.Ldate|log.Ltime)
 	errLog := log.New(os.Stderr, "ERROR ", log.Ldate|log.Ltime|log.Lshortfile)
 
+	cli := hb.NewClient()
+	posts, resp, err := cli.GetPosts(context.Background(), 1, 40)
+	if err != nil {
+		errLog.Fatalf(
+			"failed fetching initial posts %v: response: %+v",
+			err,
+			resp,
+		)
+	}
+
 	app := &application{
 		infoLog: infoLog,
 		errLog:  errLog,
+		posts:   posts,
 	}
 
 	srv := &http.Server{
@@ -63,6 +78,6 @@ func main() {
 	}
 
 	infoLog.Println("starting server on", *addr)
-	err := srv.ListenAndServe()
+	err = srv.ListenAndServe()
 	errLog.Fatal(err)
 }
