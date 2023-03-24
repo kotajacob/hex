@@ -25,6 +25,11 @@ func (app *application) routes() http.Handler {
 	return mux
 }
 
+type listPage struct {
+	MOTD  string
+	Posts []hb.Post
+}
+
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	ts, err := template.ParseFS(ui.EFS, "main.tmpl")
 	if err != nil {
@@ -37,7 +42,10 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = ts.Execute(w, app.posts)
+	err = ts.Execute(w, listPage{
+		MOTD:  hb.GetMOTD(),
+		Posts: app.posts.Posts,
+	})
 	if err != nil {
 		log.Println(err)
 		http.Error(

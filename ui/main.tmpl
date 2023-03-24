@@ -11,41 +11,93 @@
 		--s2: calc(var(--s1) * var(--ratio));
 		--s3: calc(var(--s2) * var(--ratio));
 		--s4: calc(var(--s3) * var(--ratio));
+		--color-primary: #e36956;
+		--color-alt: #9a407e;
+		--color-fg: #000;
+		--color-bg: #fff;
+		font-size: calc(.333vw + 1em);
 	}
 	*,
 	:after,
 	:before {
-		box-sizing:border-box;
-		font-family:inherit;
-		overflow-wrap:break-word;
-		margin:0;
-		padding:0;
-		border:0 solid
+		box-sizing: border-box;
+		font-family: inherit;
+		color: inherit;
+		background-color: inherit;
+		overflow-wrap: break-word;
+		margin: 0;
+		padding: 0;
+		border: 0 solid
 	}
-	main {
+	body {
+		color: var(--color-fg);
+		background-color: var(--color-bg);
 		box-sizing: content-box;
 		max-inline-size: 60ch;
 		margin-inline: auto;
-		padding-inline-start: var(--s1);
-		padding-inline-end: var(--s1);
+		padding: var(--s1);
 		font-family: system-ui, sans-serif;
 	}
+	body > * + * {
+		margin-block-start: var(--s1);
+	}
+	a {
+		color: var(--color-primary);
+	}
+	a:hover {
+		color: var(--color-bg);
+		background-color: var(--color-primary);
+	}
+	a:visited {
+		color: var(--color-alt);
+	}
+	a:visited:hover {
+		color: var(--color-bg);
+		background-color: var(--color-alt);
+	}
+	hr {
+		border-bottom: 0.125rem solid var(--color-alt);
+	}
+
+	header {
+		font-family: monospace;
+	}
+	h1 {
+		text-align: center;
+	}
+	header a {
+		color: inherit;
+		text-decoration: none;
+	}
+	header > * + * {
+		margin-block-start: var(--s1);
+	}
+
 	.posts {
-		padding: 0;
-		list-style-type: none;
+		display: flex;
+		flex-direction: column;
+		justify-content: flex-start;
 	}
 	.posts > * + * {
 		margin-block-start: var(--s1);
 	}
+	.posts a {
+		text-decoration: none;
+	}
 	</style>
 </head>
 <body>
+	<header>
+		<h1><a href="/">diet hexbear</a></h1>
+		<aside>{{ .MOTD }}</aside>
+	</header>
+	<hr>
 	<main>
-		<ol class="posts">
+		<div class="posts">
 		{{ range .Posts }}
-			<li><a href="{{.URL}}">{{.Name}}</a></li>
+			<a href="{{.URL}}">{{.Name}}</a>
 		{{ end }}
-		</ol>
+		</div>
 	</main>
 </body>
 </html>
