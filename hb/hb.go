@@ -20,10 +20,10 @@ type Client struct {
 
 // NewClient constructs a client using http.DefaultClient and the default
 // base URL. The returned client is ready for use.
-func NewClient() *Client {
+func NewClient(baseURL string) *Client {
 	return &Client{
 		HTTPClient: http.DefaultClient,
-		BaseURL:    BaseURL,
+		BaseURL:    baseURL,
 	}
 }
 

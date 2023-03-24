@@ -58,12 +58,13 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	addr := flag.String("addr", ":4000", "HTTP network address")
+	hbURL := flag.String("hb", hb.BaseURL, "hexbear baseURL")
 	flag.Parse()
 
 	infoLog := log.New(os.Stdout, "INFO ", log.Ldate|log.Ltime)
 	errLog := log.New(os.Stderr, "ERROR ", log.Ldate|log.Ltime|log.Lshortfile)
 
-	cli := hb.NewClient()
+	cli := hb.NewClient(*hbURL)
 	posts, resp, err := cli.GetPosts(context.Background(), 1, 40)
 	if err != nil {
 		errLog.Fatalf(
