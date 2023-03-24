@@ -17,6 +17,11 @@ type application struct {
 
 	cache     *cache
 	templates map[string]*template.Template
+
+	// In order to use inline css, we need to set a randomly generated nonce
+	// value for each request. This is set in our secureHeaders middleware and
+	// then used in our base template.
+	cspNonce string
 }
 
 func main() {

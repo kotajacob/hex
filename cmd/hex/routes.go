@@ -15,12 +15,13 @@ func (app *application) routes() http.Handler {
 	mux.HandleFunc("/", app.home)
 	mux.HandleFunc("/communities", app.communities)
 	mux.HandleFunc("/ppb", app.ppb)
-	return mux
+	return app.secureHeaders(mux)
 }
 
 type listPage struct {
-	MOTD  string
-	Posts []hb.Post
+	CSPNonce string
+	MOTD     string
+	Posts    []hb.Post
 }
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
@@ -41,8 +42,9 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err := ts.ExecuteTemplate(w, "base", listPage{
-		MOTD:  hb.GetMOTD(),
-		Posts: posts,
+		CSPNonce: app.cspNonce,
+		MOTD:     hb.GetMOTD(),
+		Posts:    posts,
 	})
 	if err != nil {
 		log.Println(err)
@@ -55,6 +57,7 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 }
 
 type communitiesPage struct {
+	CSPNonce    string
 	Communities map[int]hb.Community
 }
 
@@ -71,6 +74,7 @@ func (app *application) communities(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err := ts.ExecuteTemplate(w, "base", communitiesPage{
+		CSPNonce:    app.cspNonce,
 		Communities: app.cache.communities,
 	})
 	if err != nil {
