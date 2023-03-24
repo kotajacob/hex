@@ -11,8 +11,8 @@
 		--s2: calc(var(--s1) * var(--ratio));
 		--s3: calc(var(--s2) * var(--ratio));
 		--s4: calc(var(--s3) * var(--ratio));
-		--color-primary: #e36956;
-		--color-alt: #9a407e;
+		--color-primary: #9a407e;
+		--color-alt: #e36956;
 		--color-fg: #000;
 		--color-bg: #fff;
 		font-size: calc(.333vw + 1em);
@@ -42,21 +42,21 @@
 		margin-block-start: var(--s1);
 	}
 	a {
-		color: var(--color-primary);
+		color: var(--color-alt);
 	}
 	a:hover {
 		color: var(--color-bg);
-		background-color: var(--color-primary);
+		background-color: var(--color-alt);
 	}
 	a:visited {
-		color: var(--color-alt);
+		color: var(--color-primary);
 	}
 	a:visited:hover {
 		color: var(--color-bg);
-		background-color: var(--color-alt);
+		background-color: var(--color-primary);
 	}
 	hr {
-		border-bottom: 0.125rem solid var(--color-alt);
+		border-bottom: 0.125rem solid var(--color-primary);
 	}
 
 	header {
