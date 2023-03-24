@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 )
 
-//go:embed "base.tmpl" "pages"
+//go:embed "base.tmpl" "pages" "images"
 var EFS embed.FS
 
 func Templates() (map[string]*template.Template, error) {
