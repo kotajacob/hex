@@ -14,7 +14,7 @@ func (app *application) routes() http.Handler {
 	mux.HandleFunc("/", app.home)
 	mux.HandleFunc("/communities", app.communities)
 	mux.HandleFunc("/ppb", app.ppb)
-	return app.logRequest(app.secureHeaders(mux))
+	return app.recoverPanic(app.logRequest(app.secureHeaders(mux)))
 }
 
 type listPage struct {
