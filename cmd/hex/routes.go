@@ -8,14 +8,16 @@ import (
 
 	"git.sr.ht/~kota/hex/hb"
 	"git.sr.ht/~kota/hex/ui"
+
+	"github.com/julienschmidt/httprouter"
 )
 
 func (app *application) routes() http.Handler {
-	mux := http.NewServeMux()
-	mux.HandleFunc("/", app.home)
-	mux.HandleFunc("/communities", app.communities)
-	mux.HandleFunc("/ppb", app.ppb)
-	return app.recoverPanic(app.logRequest(app.secureHeaders(mux)))
+	router := httprouter.New()
+	router.HandlerFunc(http.MethodGet, "/", app.home)
+	router.HandlerFunc(http.MethodGet, "/communities", app.communities)
+	router.HandlerFunc(http.MethodGet, "/ppb", app.ppb)
+	return app.recoverPanic(app.logRequest(app.secureHeaders(router)))
 }
 
 func (app *application) render(
