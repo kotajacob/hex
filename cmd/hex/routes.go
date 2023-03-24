@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"net/http"
@@ -17,36 +18,49 @@ func (app *application) routes() http.Handler {
 	return app.recoverPanic(app.logRequest(app.secureHeaders(mux)))
 }
 
-type listPage struct {
+func (app *application) render(
+	w http.ResponseWriter,
+	status int,
+	page string,
+	data interface{},
+) {
+	ts, ok := app.templates[page]
+	if !ok {
+		app.serverError(w, fmt.Errorf(
+			"the template %s is missing",
+			page,
+		))
+		return
+	}
+
+	buf := new(bytes.Buffer)
+
+	err := ts.ExecuteTemplate(buf, "base", data)
+	if err != nil {
+		app.serverError(w, err)
+	}
+
+	w.WriteHeader(status)
+	buf.WriteTo(w)
+}
+
+type homePage struct {
 	CSPNonce string
 	MOTD     string
 	Posts    []hb.Post
 }
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
-	tsName := "home.tmpl"
-	ts, ok := app.templates[tsName]
-	if !ok {
-		app.serverError(w, fmt.Errorf(
-			"the template %s is missing",
-			tsName,
-		))
-		return
-	}
-
 	var posts []hb.Post
 	for _, id := range app.cache.communities[0].Posts {
 		posts = append(posts, app.cache.posts[id])
 	}
 
-	err := ts.ExecuteTemplate(w, "base", listPage{
+	app.render(w, http.StatusOK, "home.tmpl", homePage{
 		CSPNonce: app.cspNonce,
 		MOTD:     hb.GetMOTD(),
 		Posts:    posts,
 	})
-	if err != nil {
-		app.serverError(w, err)
-	}
 }
 
 type communitiesPage struct {
@@ -55,20 +69,10 @@ type communitiesPage struct {
 }
 
 func (app *application) communities(w http.ResponseWriter, r *http.Request) {
-	tsName := "communities.tmpl"
-	ts, ok := app.templates[tsName]
-	if !ok {
-		app.serverError(w, err)
-		return
-	}
-
-	err := ts.ExecuteTemplate(w, "base", communitiesPage{
+	app.render(w, http.StatusOK, "communities.tmpl", communitiesPage{
 		CSPNonce:    app.cspNonce,
 		Communities: app.cache.communities,
 	})
-	if err != nil {
-		app.serverError(w, err)
-	}
 }
 
 func (app *application) ppb(w http.ResponseWriter, r *http.Request) {
