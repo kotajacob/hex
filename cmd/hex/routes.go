@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 
 	"git.sr.ht/~kota/hex/hb"
@@ -28,11 +27,10 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	tsName := "home.tmpl"
 	ts, ok := app.templates[tsName]
 	if !ok {
-		app.errLog.Println(fmt.Errorf(
+		app.serverError(w, fmt.Errorf(
 			"the template %s is missing",
 			tsName,
 		))
-		http.NotFound(w, r)
 		return
 	}
 
@@ -47,12 +45,7 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 		Posts:    posts,
 	})
 	if err != nil {
-		log.Println(err)
-		http.Error(
-			w,
-			http.StatusText(http.StatusInternalServerError),
-			http.StatusInternalServerError,
-		)
+		app.serverError(w, err)
 	}
 }
 
@@ -65,11 +58,7 @@ func (app *application) communities(w http.ResponseWriter, r *http.Request) {
 	tsName := "communities.tmpl"
 	ts, ok := app.templates[tsName]
 	if !ok {
-		app.errLog.Println(fmt.Errorf(
-			"the template %s is missing",
-			tsName,
-		))
-		http.NotFound(w, r)
+		app.serverError(w, err)
 		return
 	}
 
@@ -78,26 +67,19 @@ func (app *application) communities(w http.ResponseWriter, r *http.Request) {
 		Communities: app.cache.communities,
 	})
 	if err != nil {
-		log.Println(err)
-		http.Error(
-			w,
-			http.StatusText(http.StatusInternalServerError),
-			http.StatusInternalServerError,
-		)
+		app.serverError(w, err)
 	}
 }
 
 func (app *application) ppb(w http.ResponseWriter, r *http.Request) {
 	f, err := ui.EFS.Open("images/ppb.jpg")
 	if err != nil {
-		app.errLog.Println(fmt.Errorf("failed to open ppb.jpg: %v", err))
-		http.NotFound(w, r)
+		app.serverError(w, fmt.Errorf("failed to open ppb.jpg: %v", err))
 		return
 	}
 	data, err := io.ReadAll(f)
 	if err != nil {
-		app.errLog.Println(fmt.Errorf("failed to read ppb.jpg: %v", err))
-		http.NotFound(w, r)
+		app.serverError(w, fmt.Errorf("failed to read ppb.jpg: %v", err))
 		return
 	}
 	w.Write(data)

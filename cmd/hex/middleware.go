@@ -3,7 +3,7 @@ package main
 import (
 	"crypto/rand"
 	"encoding/base64"
-	"log"
+	"fmt"
 	"net/http"
 )
 
@@ -19,12 +19,7 @@ func (app *application) secureHeaders(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		nonce, err := cspNonce()
 		if err != nil {
-			log.Println(err)
-			http.Error(
-				w,
-				http.StatusText(http.StatusInternalServerError),
-				http.StatusInternalServerError,
-			)
+			app.serverError(w, err)
 			return
 		}
 		w.Header().Set(
