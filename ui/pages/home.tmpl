@@ -7,7 +7,7 @@
 	<main>
 		<div class="posts">
 		{{ range .Posts }}
-			<a href="{{.URL}}">{{.Name}}</a>
+			<a href="{{if .URL}}{{.URL}}{{else}}/post/{{.ID}}{{end}}">{{.Name}}</a>
 		{{ end }}
 		</div>
 	</main>
