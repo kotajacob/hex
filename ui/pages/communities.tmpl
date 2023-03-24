@@ -1,0 +1,14 @@
+{{define "main"}}
+	<header>
+		<h1><a href="/">diet hexbear</a></h1>
+		<aside>communities</aside>
+	</header>
+	<hr>
+	<main>
+		<div class="posts">
+		{{ range .Communities }}
+			<a href="/c/{{.Name}}">{{.Name}}</a>
+		{{ end }}
+		</div>
+	</main>
+{{end}}

@@ -1,0 +1,14 @@
+{{define "main"}}
+	<header>
+		<h1><a href="/">diet hexbear</a></h1>
+		<aside>{{ .MOTD }}</aside>
+	</header>
+	<hr>
+	<main>
+		<div class="posts">
+		{{ range .Posts }}
+			<a href="{{.URL}}">{{.Name}}</a>
+		{{ end }}
+		</div>
+	</main>
+{{end}}

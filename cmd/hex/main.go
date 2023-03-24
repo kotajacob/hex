@@ -2,18 +2,21 @@ package main
 
 import (
 	"flag"
+	"html/template"
 	"log"
 	"net/http"
 	"os"
 
 	"git.sr.ht/~kota/hex/hb"
+	"git.sr.ht/~kota/hex/ui"
 )
 
 type application struct {
 	infoLog *log.Logger
 	errLog  *log.Logger
 
-	cache *cache
+	cache     *cache
+	templates map[string]*template.Template
 }
 
 func main() {
@@ -24,6 +27,11 @@ func main() {
 	infoLog := log.New(os.Stdout, "INFO ", log.Ldate|log.Ltime)
 	errLog := log.New(os.Stderr, "ERROR ", log.Ldate|log.Ltime|log.Lshortfile)
 
+	templates, err := ui.Templates()
+	if err != nil {
+		errLog.Fatal(err)
+	}
+
 	cli := hb.NewClient(*hbURL)
 	cache, err := populateCache(cli)
 	if err != nil {
@@ -33,9 +41,10 @@ func main() {
 		)
 	}
 	app := &application{
-		infoLog: infoLog,
-		errLog:  errLog,
-		cache:   cache,
+		infoLog:   infoLog,
+		errLog:    errLog,
+		cache:     cache,
+		templates: templates,
 	}
 
 	srv := &http.Server{
