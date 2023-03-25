@@ -3,7 +3,9 @@
 <html lang="en">
 <head>
 	<meta charset="UTF-8">
-	<title>(๑ᵔ⤙ᵔ๑)</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="description" content="Hexbear, but for old and slower computers">
+	<title>ʕ •ᴥ•ʔ</title>
 	<style nonce="{{.CSPNonce}}">
 	:root {
 		--ratio: 1.5;
@@ -12,8 +14,8 @@
 		--s2: calc(var(--s1) * var(--ratio));
 		--s3: calc(var(--s2) * var(--ratio));
 		--s4: calc(var(--s3) * var(--ratio));
-		--color-primary: #9a407e;
-		--color-alt: #e36956;
+		--color-primary: hsl(319deg 41% 43%);
+		--color-alt: hsl(8deg 72% 43%);
 		--color-fg: #000;
 		--color-bg: #fff;
 		font-size: calc(.333vw + 1em);
@@ -45,19 +47,28 @@
 	a {
 		color: var(--color-alt);
 	}
-	a:hover {
+	a:hover, a:focus {
 		color: var(--color-bg);
+		outline: 0 none;
 		background-color: var(--color-alt);
 	}
 	a:visited {
 		color: var(--color-primary);
 	}
-	a:visited:hover {
+	a:visited:hover, a:visited:focus {
 		color: var(--color-bg);
+		outline: 0 none;
 		background-color: var(--color-primary);
 	}
 	hr {
 		border-bottom: 0.125rem solid var(--color-primary);
+	}
+	ul, blockqoute {
+		padding-inline-start: var(--s0);
+	}
+	blockqoute {
+		box-sizing: content-box;
+		outline-inline-start: 0.25rem solid var(--color-primary);
 	}
 
 	header {
@@ -67,23 +78,39 @@
 		text-align: center;
 	}
 	header a {
-		color: inherit;
 		text-decoration: none;
 	}
 	header > * + * {
 		margin-block-start: var(--s1);
 	}
 
-	.posts {
+	.stack {
 		display: flex;
 		flex-direction: column;
 		justify-content: flex-start;
 	}
-	.posts > * + * {
+	.stack > * + * {
 		margin-block-start: var(--s1);
 	}
-	.posts a {
+	.stack a {
 		text-decoration: none;
+	}
+
+	.post {
+		display: flex;
+	}
+	.post > *:first-child {
+		flex: 1;
+		padding-inline-end: 1ch;
+	}
+
+	article {
+		display: flex;
+		flex-direction: column;
+		justify-content: flex-start;
+	}
+	article > * + * {
+		margin-block-start: var(--s0);
 	}
 	</style>
 </head>

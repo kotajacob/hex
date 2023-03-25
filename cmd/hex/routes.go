@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 
 	"git.sr.ht/~kota/hex/hb"
 	"git.sr.ht/~kota/hex/ui"
@@ -15,6 +16,7 @@ import (
 func (app *application) routes() http.Handler {
 	router := httprouter.New()
 	router.HandlerFunc(http.MethodGet, "/", app.home)
+	router.HandlerFunc(http.MethodGet, "/post/:id", app.post)
 	router.HandlerFunc(http.MethodGet, "/communities", app.communities)
 	router.HandlerFunc(http.MethodGet, "/ppb", app.ppb)
 	return app.recoverPanic(app.logRequest(app.secureHeaders(router)))
@@ -62,6 +64,28 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 		CSPNonce: app.cspNonce,
 		MOTD:     hb.GetMOTD(),
 		Posts:    posts,
+	})
+}
+
+type postPage struct {
+	CSPNonce  string
+	Post      hb.Post
+	Community hb.Community
+}
+
+func (app *application) post(w http.ResponseWriter, r *http.Request) {
+	params := httprouter.ParamsFromContext(r.Context())
+	id, err := strconv.Atoi(params.ByName("id"))
+	if err != nil || id < 1 {
+		app.notFound(w)
+		return
+	}
+	post := app.cache.posts[id]
+	community := app.cache.communities[post.CommunityID]
+	app.render(w, http.StatusOK, "post.tmpl", postPage{
+		CSPNonce:  app.cspNonce,
+		Post:      post,
+		Community: community,
 	})
 }
 

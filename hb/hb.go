@@ -42,7 +42,11 @@ func (e StatusError) Error() string {
 // The API responce is JSON decoded and stored in the value pointed to by v, or
 // returned as an error if an API error has occured.
 // If v is nil, and no error happens, the responce is returned as is.
-func (c *Client) Do(ctx context.Context, path string, v interface{}) (*http.Response, error) {
+func (c *Client) Do(
+	ctx context.Context,
+	path string,
+	v interface{},
+) (*http.Response, error) {
 	req, err := http.NewRequest("GET", c.BaseURL+path, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to build request: %v", err)

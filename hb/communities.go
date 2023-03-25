@@ -15,7 +15,7 @@ type Community struct {
 
 	// Posts is an orderd slice of post IDs in this community using default
 	// sorting. This is not a real field returned from hexbear.
-	Posts []int
+	Posts []int `json:"posts"`
 }
 type CommunityList struct {
 	Communities []Community `json:"communities"`

@@ -5,9 +5,12 @@
 	</header>
 	<hr>
 	<main>
-		<div class="posts">
+		<div class="stack">
 		{{ range .Posts }}
-			<a href="{{if .URL}}{{.URL}}{{else}}/post/{{.ID}}{{end}}">{{.Name}}</a>
+			<span class="post">
+				<a href="{{if .URL}}{{.URL}}{{else}}/post/{{.ID}}{{end}}">{{.Name}}</a>
+				<a href="/post/{{.ID}}">[talk]</a>
+			</span>
 		{{ end }}
 		</div>
 	</main>
