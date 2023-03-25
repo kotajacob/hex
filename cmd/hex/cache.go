@@ -10,11 +10,13 @@ import (
 type cache struct {
 	communities map[int]hb.Community
 	posts       map[int]hb.Post
+	comments    map[int]hb.Comments
 }
 
-func populateCache(cli *hb.Client) (*cache, error) {
+func initialCache(cli *hb.Client) (*cache, error) {
 	communities := make(map[int]hb.Community)
 	posts := make(map[int]hb.Post)
+	comments := make(map[int]hb.Comments)
 
 	cms, resp, err := cli.CommunityList(context.TODO())
 	if err != nil || cms == nil {
@@ -52,5 +54,6 @@ func populateCache(cli *hb.Client) (*cache, error) {
 	return &cache{
 		communities: communities,
 		posts:       posts,
+		comments:    comments,
 	}, nil
 }

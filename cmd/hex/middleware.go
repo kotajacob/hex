@@ -24,7 +24,7 @@ func (app *application) secureHeaders(next http.Handler) http.Handler {
 		}
 		w.Header().Set(
 			"Content-Security-Policy",
-			"default-src 'none'; style-src 'nonce-"+nonce+"'",
+			"default-src 'none'; style-src 'nonce-"+nonce+"'; img-src https: data:",
 		)
 		w.Header().Set("Referrer-Policy", "origin-when-cross-origin")
 		w.Header().Set("X-Content-Type-Options", "nosniff")

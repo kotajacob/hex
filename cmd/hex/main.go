@@ -15,6 +15,7 @@ type application struct {
 	infoLog *log.Logger
 	errLog  *log.Logger
 
+	cli       *hb.Client
 	cache     *cache
 	templates map[string]*template.Template
 
@@ -38,7 +39,7 @@ func main() {
 	}
 
 	cli := hb.NewClient(*hbURL)
-	cache, err := populateCache(cli)
+	cache, err := initialCache(cli)
 	if err != nil {
 		errLog.Fatalf(
 			"failed populating initial cache %v",
@@ -49,6 +50,7 @@ func main() {
 		infoLog:   infoLog,
 		errLog:    errLog,
 		cache:     cache,
+		cli:       cli,
 		templates: templates,
 	}
 

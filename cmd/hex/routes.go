@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -70,6 +71,7 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 type postPage struct {
 	CSPNonce  string
 	Post      hb.Post
+	Comments  []hb.Comment
 	Community hb.Community
 }
 
@@ -80,11 +82,29 @@ func (app *application) post(w http.ResponseWriter, r *http.Request) {
 		app.notFound(w)
 		return
 	}
-	post := app.cache.posts[id]
+
+	var post hb.Post
+	comments, ok := app.cache.comments[id]
+	if !ok {
+		// Do a live fetch of the post and comments.
+		pc, _, err := app.cli.Post(context.TODO(), id)
+		if err != nil {
+			app.serverError(w, err)
+			return
+		}
+		post = pc.Post
+		comments = pc.Comments
+		app.cache.posts[id] = post
+		app.cache.comments[id] = comments
+	} else {
+		post = app.cache.posts[id]
+	}
+
 	community := app.cache.communities[post.CommunityID]
 	app.render(w, http.StatusOK, "post.tmpl", postPage{
 		CSPNonce:  app.cspNonce,
 		Post:      post,
+		Comments:  comments,
 		Community: community,
 	})
 }

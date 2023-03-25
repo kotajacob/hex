@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"strings"
 
 	"github.com/yuin/goldmark"
 )
@@ -17,10 +18,27 @@ type Post struct {
 	URL         string        `json:"url"`
 	Body        template.HTML `json:"body"`
 	CommunityID int           `json:"community_id"`
+	Comments    []Comment     `json:"comments"`
+
+	// Image is a URL to a header image. During processing, if the URL contains
+	// an image hosted on hexbear, we set this field and set the URL to blank.
+	Image string
 }
+
 type PostList struct {
 	Posts []Post `json:"posts"`
 }
+
+type PostComments struct {
+	Post     Post     `json:"post"`
+	Comments Comments `json:"comments"`
+}
+
+type Comment struct {
+	ID      int    `json:"id"`
+	Content string `json:"content"`
+}
+type Comments []Comment
 
 // processPost makes all nessesary modifications to the Post after it's fetched.
 func processPost(p *Post) error {
@@ -33,6 +51,12 @@ func processPost(p *Post) error {
 		return err
 	}
 	p.Body = template.HTML(buf.Bytes())
+
+	// Check if the URL is an image.
+	if strings.HasPrefix(p.URL, "https://www.hexbear.net/pictrs/image/") {
+		p.Image = p.URL
+		p.URL = ""
+	}
 	return nil
 }
 
@@ -68,20 +92,20 @@ func (c *Client) PostList(
 func (c *Client) Post(
 	ctx context.Context,
 	id int,
-) (*Post, *http.Response, error) {
+) (*PostComments, *http.Response, error) {
 	path := fmt.Sprintf(
 		"post?id=%d",
 		id,
 	)
-	post := new(Post)
-	rsp, err := c.Do(ctx, path, post)
+	pc := new(PostComments)
+	rsp, err := c.Do(ctx, path, pc)
 	if err != nil {
-		return post, rsp, err
+		return pc, rsp, err
 	}
 
-	if err := processPost(post); err != nil {
-		return post, rsp, err
+	if err := processPost(&pc.Post); err != nil {
+		return pc, rsp, err
 	}
 
-	return post, rsp, err
+	return pc, rsp, err
 }

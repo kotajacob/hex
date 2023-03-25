@@ -55,7 +55,7 @@
 	a:visited {
 		color: var(--color-primary);
 	}
-	a:visited:hover, a:visited:focus {
+	a:visited:hover, a:visited:focus, ::selection {
 		color: var(--color-bg);
 		outline: 0 none;
 		background-color: var(--color-primary);
@@ -110,6 +110,15 @@
 		justify-content: flex-start;
 	}
 	article > * + * {
+		margin-block-start: var(--s0);
+	}
+
+	.comments {
+		display: flex;
+		flex-direction: column;
+		justify-content: flex-start;
+	}
+	.comments > * + * {
 		margin-block-start: var(--s0);
 	}
 	</style>

@@ -7,8 +7,16 @@
 	<main>
 		<div class="stack">
 			<h1>{{.Post.Name}}</h1>
+			{{if .Post.Image}}<img src="{{.Post.Image}}" alt="Title Picture">{{end}}
 			<article>{{.Post.Body}}</article>
 			<hr>
+			<div class="comments">
+				<ul>
+					{{range .Comments}}
+						<li>{{.Content}}</li>
+					{{end}}
+				</ul>
+			</div>
 		</div>
 	</main>
 {{end}}
