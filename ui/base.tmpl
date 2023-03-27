@@ -9,6 +9,11 @@
 	<style nonce="{{.CSPNonce}}">
 	:root {
 		--ratio: 1.5;
+		--s-5: calc(var(--s-4) / var(--ratio));
+		--s-4: calc(var(--s-3) / var(--ratio));
+		--s-3: calc(var(--s-2) / var(--ratio));
+		--s-2: calc(var(--s-1) / var(--ratio));
+		--s-1: calc(var(--s0) / var(--ratio));
 		--s0: 1rem;
 		--s1: calc(var(--s0) * var(--ratio));
 		--s2: calc(var(--s1) * var(--ratio));
@@ -61,14 +66,13 @@
 		background-color: var(--color-primary);
 	}
 	hr {
-		border-bottom: 0.125rem solid var(--color-primary);
+		border-block-end: var(--s-4) solid var(--color-primary);
 	}
 	ul, blockqoute {
 		padding-inline-start: var(--s0);
 	}
 	blockqoute {
-		box-sizing: content-box;
-		outline-inline-start: 0.25rem solid var(--color-primary);
+		border-block-end: var(--s-4) solid var(--color-alt);
 	}
 
 	header {
@@ -117,9 +121,17 @@
 		display: flex;
 		flex-direction: column;
 		justify-content: flex-start;
+		list-style: none;
 	}
-	.comments > * + * {
+	.comment > .comment-text {
+		margin-block: 0;
+	}
+	.comments * + * {
 		margin-block-start: var(--s0);
+	}
+	.nested {
+		border-inline-start: var(--s-4) solid var(--color-primary);
+		padding-inline-start: var(--s-1);
 	}
 	</style>
 </head>

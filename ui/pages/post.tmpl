@@ -10,13 +10,11 @@
 			{{if .Post.Image}}<img src="{{.Post.Image}}" alt="Title Picture">{{end}}
 			<article>{{.Post.Body}}</article>
 			<hr>
-			<div class="comments">
-				<ul>
-					{{range .Comments}}
-						<li>{{.Content}}</li>
-					{{end}}
-				</ul>
-			</div>
+			<ol class="comments">
+				{{range .Comments}}
+					{{template "comment" .}}
+				{{end}}
+			</ol>
 		</div>
 	</main>
 {{end}}

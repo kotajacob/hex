@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
+	"time"
 )
 
 // BaseURL is the default URL for the hexbear API.
@@ -36,6 +38,25 @@ var _ error = StatusError{}
 
 func (e StatusError) Error() string {
 	return fmt.Sprintf("bad responce status code: %d", e.Code)
+}
+
+// HBTime represents the time format used by the hexbear API.
+// The format itself is semi-nonstandard and also will sometimes be present,
+// but with the literal string "null".
+type HBTime time.Time
+
+func (h *HBTime) UnmarshalJSON(b []byte) error {
+	s := strings.Trim(string(b), "\"")
+	t, err := time.Parse("2006-01-02T15:04:05.000000", s)
+	if err != nil {
+		return err
+	}
+	*h = HBTime(t)
+	return nil
+}
+
+func (h HBTime) String() string {
+	return time.Time(h).Format(time.DateTime)
 }
 
 // Do sends an API request and returns the API responce.

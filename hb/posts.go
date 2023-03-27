@@ -18,7 +18,6 @@ type Post struct {
 	URL         string        `json:"url"`
 	Body        template.HTML `json:"body"`
 	CommunityID int           `json:"community_id"`
-	Comments    []Comment     `json:"comments"`
 
 	// Image is a URL to a header image. During processing, if the URL contains
 	// an image hosted on hexbear, we set this field and set the URL to blank.
@@ -35,8 +34,20 @@ type PostComments struct {
 }
 
 type Comment struct {
-	ID      int    `json:"id"`
-	Content string `json:"content"`
+	ID          int     `json:"id"`
+	ParentID    *int    `json:"parent_id"`
+	Content     string  `json:"content"`
+	Published   HBTime  `json:"published"`
+	Updated     *HBTime `json:"updated"`
+	CreatorName string  `json:"creator_name"`
+	CreatorTags struct {
+		Pronouns string `json:"pronouns"`
+	} `json:"creator_tags"`
+	Score   int `json:"score"`
+	HotRank int `json:"hot_rank"`
+
+	// We rebuild the list of comments into a tree for faster display.
+	Children []*Comment
 }
 type Comments []Comment
 
@@ -58,6 +69,42 @@ func processPost(p *Post) error {
 		p.URL = ""
 	}
 	return nil
+}
+
+// processComments makes all nessesary modifications to the comment list after
+// it's fetched.
+// This notably includes rebuilding the list into a tree. To do so, we remove
+// the "parent_id" and add a children list to each comment.
+func processComments(cs *Comments) {
+	// The comment list is pre-sorted with the most recent list at the
+	// start of the slice. As a result, we can read the slice backwards and
+	// parse it into a tree in a single pass.
+	list := *cs
+	root := new(Comment)
+	for i := len(list) - 1; i >= 0; i-- {
+		root.addChild(list[i])
+	}
+
+	var processComments Comments
+	for _, comment := range root.Children {
+		processComments = append(processComments, *comment)
+	}
+	*cs = processComments
+}
+
+func (parent *Comment) addChild(child Comment) {
+	var id int
+	if child.ParentID != nil {
+		id = *child.ParentID
+	}
+
+	if id == parent.ID {
+		parent.Children = append(parent.Children, &child)
+	}
+
+	for _, c := range parent.Children {
+		c.addChild(child)
+	}
 }
 
 // PostLst fetches a slice of posts.
@@ -106,6 +153,6 @@ func (c *Client) Post(
 	if err := processPost(&pc.Post); err != nil {
 		return pc, rsp, err
 	}
-
+	processComments(&pc.Comments)
 	return pc, rsp, err
 }

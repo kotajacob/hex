@@ -1,0 +1,19 @@
+{{define "comment"}}
+<li class="comment">
+	<div class="byline">
+		<a href="/u/{{.CreatorName}}">{{.CreatorName}}</a>
+		<span>{{if .CreatorTags.Pronouns}}[{{.CreatorTags.Pronouns}}]{{else}}[none/none]{{end}}</span>
+		<span>{{if .Updated}}{{.Updated}}{{else}}{{.Published}}{{end}}</span>
+	</div>
+	<div class="comment-text">
+	{{.Content}}
+	</div>
+	{{if .Children}}
+	<ol class="comments nested">
+	{{range .Children}}
+		{{template "comment" .}}
+	{{end}}
+	</ol>
+	{{end}}
+</li>
+{{end}}
