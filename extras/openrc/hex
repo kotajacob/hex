@@ -1,0 +1,11 @@
+#!/sbin/openrc-run
+
+description="hex"
+command=${command:-/usr/bin/hex}
+command_background=true
+pidfile="/run/${RC_SVCNAME}.pid"
+
+depend() {
+	need net
+	use dns logger netmount
+}
