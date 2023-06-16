@@ -6,9 +6,15 @@
 	<hr>
 	<main>
 		<div class="stack">
+			{{if .Post.URL}}
+			<h1><a href={{.Post.URL}}>{{.Post.Name}}</a></h1>
+			{{else}}
 			<h1>{{.Post.Name}}</h1>
+			{{end}}
 			{{if .Post.Image}}<img src="{{.Post.Image}}" alt="Title Picture">{{end}}
+			{{if .Post.Body}}
 			<article>{{.Post.Body}}</article>
+			{{end}}
 			<hr>
 			<ol class="comments">
 				{{range .Comments}}
