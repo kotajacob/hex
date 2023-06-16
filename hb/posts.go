@@ -7,9 +7,6 @@ import (
 	"html/template"
 	"net/http"
 	"strings"
-
-	"github.com/yuin/goldmark"
-	"github.com/yuin/goldmark/extension"
 )
 
 // Post is a single post on hexbear.
@@ -51,17 +48,6 @@ type Comment struct {
 	Children []*Comment
 }
 type Comments []Comment
-
-var markdown = goldmark.New(
-	goldmark.WithExtensions(
-		extension.NewLinkify(
-			extension.WithLinkifyAllowedProtocols([][]byte{
-				[]byte("http:"),
-				[]byte("https:"),
-			}),
-		),
-	),
-)
 
 // processPost makes all nessesary modifications to the Post after it's fetched.
 func processPost(p *Post) error {

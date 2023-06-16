@@ -133,10 +133,48 @@
 		border-inline-start: var(--s-4) solid var(--color-primary);
 		padding-inline-start: var(--s-1);
 	}
+
+	.comment-folder {
+		font-family: monospace, monospace;
+		color: var(--color-alt);
+		cursor: pointer;
+	}
+	.comment-folder:hover, .comment-folder:focus {
+		color: var(--color-bg);
+		outline: 0 none;
+		background-color: var(--color-alt);
+	}
+	.folded > * + * {
+		display: none;
+	}
+	small {
+		vertical-align:	15%;
+		font-size: var(--s-1);
+	}
+	.byline time {
+		float: right;
+	}
 	</style>
 </head>
 <body>
 	{{template "main" .}}
 </body>
 </html>
+<script nonce="{{.CSPNonce}}">
+const folders = document.getElementsByClassName("comment-folder");
+const fold = (event) => {
+	const label = event.currentTarget;
+	const comment = label.parentElement.parentElement;
+	if (comment.classList.contains("folded")) {
+		comment.classList.remove("folded")
+		label.textContent = "[-]"
+	} else {
+		comment.classList.add("folded")
+		label.textContent = "[+]"
+	}
+}
+for (folder of folders) {
+	folder.addEventListener("click", fold);
+}
+</script>
 {{end}}

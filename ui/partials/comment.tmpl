@@ -1,9 +1,10 @@
 {{define "comment"}}
 <li class="comment">
 	<div class="byline">
+		<label class="comment-folder">[-]</label>
 		<a href="/u/{{.CreatorName}}">{{.CreatorName}}</a>
-		<span>{{if .CreatorTags.Pronouns}}[{{.CreatorTags.Pronouns}}]{{else}}[none/none]{{end}}</span>
-		<span>{{if .Updated}}{{.Updated}}{{else}}{{.Published}}{{end}}</span>
+		<small>{{if .CreatorTags.Pronouns}}[{{.CreatorTags.Pronouns}}]{{else}}[none/none]{{end}}
+		<time>{{if .Updated}}{{.Updated}}{{else}}{{.Published}}{{end}}</time></small>
 	</div>
 	<div class="comment-text">
 	{{.Content}}

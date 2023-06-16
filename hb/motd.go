@@ -1,11 +1,29 @@
 package hb
 
-import "math/rand"
+import (
+	"bytes"
+	"html/template"
+	"math/rand"
+
+	"github.com/yuin/goldmark"
+	"github.com/yuin/goldmark/extension"
+)
+
+var markdown = goldmark.New(
+	goldmark.WithExtensions(
+		extension.NewLinkify(
+			extension.WithLinkifyAllowedProtocols([][]byte{
+				[]byte("http:"),
+				[]byte("https:"),
+			}),
+		),
+	),
+)
 
 // GetMOTD generates an MOTD without needing to contact hexbear.
 // There were scraped from the source code on 2023-03-24.
-func GetMOTD() string {
-	var MOTDs = []string{
+func GetMOTD() template.HTML {
+	MOTDs := []string{
 		"<CURRENT_USER> needs to log off.",
 		"A fascist posted today, did you?",
 		"Proud member of the swoletariat",
@@ -343,5 +361,13 @@ func GetMOTD() string {
 		"They will single-handedly raise the Soviet Union from the liberalized stronghold where it has been resting, covered in ghosts and snow! They are the Big Communism Builder. Come, witness <CURRENT_USER>'s attempt to rebuild Communism in the year <CURRENT_YEAR>!",
 		"it is <CURRENT_YEAR> and you're still posting :07:",
 	}
-	return MOTDs[rand.Intn(len(MOTDs))]
+
+	var buf bytes.Buffer
+	if err := markdown.Convert(
+		[]byte(MOTDs[rand.Intn(len(MOTDs))]),
+		&buf,
+	); err != nil {
+		return ""
+	}
+	return template.HTML(buf.Bytes())
 }

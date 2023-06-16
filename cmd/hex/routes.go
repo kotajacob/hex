@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"html/template"
 	"io"
 	"net/http"
 	"strconv"
@@ -52,7 +53,7 @@ func (app *application) render(
 
 type homePage struct {
 	CSPNonce string
-	MOTD     string
+	MOTD     template.HTML
 	Posts    []hb.Post
 }
 
