@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/yuin/goldmark"
+	"github.com/yuin/goldmark/extension"
 )
 
 // Post is a single post on hexbear.
@@ -34,12 +35,12 @@ type PostComments struct {
 }
 
 type Comment struct {
-	ID          int     `json:"id"`
-	ParentID    *int    `json:"parent_id"`
-	Content     string  `json:"content"`
-	Published   HBTime  `json:"published"`
-	Updated     *HBTime `json:"updated"`
-	CreatorName string  `json:"creator_name"`
+	ID          int           `json:"id"`
+	ParentID    *int          `json:"parent_id"`
+	Content     template.HTML `json:"content"`
+	Published   HBTime        `json:"published"`
+	Updated     *HBTime       `json:"updated"`
+	CreatorName string        `json:"creator_name"`
 	CreatorTags struct {
 		Pronouns string `json:"pronouns"`
 	} `json:"creator_tags"`
@@ -51,11 +52,22 @@ type Comment struct {
 }
 type Comments []Comment
 
+var markdown = goldmark.New(
+	goldmark.WithExtensions(
+		extension.NewLinkify(
+			extension.WithLinkifyAllowedProtocols([][]byte{
+				[]byte("http:"),
+				[]byte("https:"),
+			}),
+		),
+	),
+)
+
 // processPost makes all nessesary modifications to the Post after it's fetched.
 func processPost(p *Post) error {
 	// Process the post's body with goldmark.
 	var buf bytes.Buffer
-	if err := goldmark.Convert(
+	if err := markdown.Convert(
 		[]byte(p.Body),
 		&buf,
 	); err != nil {
@@ -99,6 +111,13 @@ func (parent *Comment) addChild(child Comment) {
 	}
 
 	if id == parent.ID {
+		var buf bytes.Buffer
+		if err := markdown.Convert(
+			[]byte(child.Content),
+			&buf,
+		); err == nil {
+			child.Content = template.HTML(buf.Bytes())
+		}
 		parent.Children = append(parent.Children, &child)
 	}
 
