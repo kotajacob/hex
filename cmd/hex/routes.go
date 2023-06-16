@@ -9,6 +9,7 @@ import (
 	"io"
 	"net/http"
 	"strconv"
+	"time"
 
 	"git.sr.ht/~kota/hex/hb"
 	"git.sr.ht/~kota/hex/ui"
@@ -57,9 +58,19 @@ type homePage struct {
 	Posts    []hb.Post
 }
 
+// home handles displaying the home page.
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
+	community, ok := app.cache.communities[0]
+	if !ok || expired(app.cache.communitiesFetched[0]) {
+		var err error
+		community, err = app.fetchHome()
+		if err != nil {
+			app.serverError(w, err)
+			return
+		}
+	}
 	var posts []hb.Post
-	for _, id := range app.cache.communities[0].Posts {
+	for _, id := range community.Posts {
 		posts = append(posts, app.cache.posts[id])
 	}
 
@@ -70,6 +81,36 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// fetchHome does a live fetch of the home page data.
+func (app *application) fetchHome() (hb.Community, error) {
+	ps, resp, err := app.cli.PostList(context.TODO(), 1, 40)
+	if err != nil || ps == nil {
+		return hb.Community{}, fmt.Errorf(
+			"failing getting font-page posts: %v resp: %v",
+			err,
+			resp,
+		)
+	}
+	var allPosts []int
+	now := time.Now()
+	for _, p := range ps.Posts {
+		app.cache.posts[p.ID] = p
+		app.cache.postsFetched[p.ID] = now
+		allPosts = append(allPosts, p.ID)
+	}
+
+	// Create a fake "all" community for home page.
+	allCommunity := hb.Community{
+		ID:    0,
+		Name:  "all",
+		Title: "All the posts from hexbear",
+		Posts: allPosts,
+	}
+	app.cache.communities[0] = allCommunity
+	app.cache.communitiesFetched[0] = now
+	return allCommunity, nil
+}
+
 type postPage struct {
 	CSPNonce  string
 	Post      hb.Post
@@ -77,6 +118,7 @@ type postPage struct {
 	Community hb.Community
 }
 
+// post handles requests for displaying a post's comment page.
 func (app *application) post(w http.ResponseWriter, r *http.Request) {
 	params := httprouter.ParamsFromContext(r.Context())
 	id, err := strconv.Atoi(params.ByName("id"))
@@ -87,9 +129,9 @@ func (app *application) post(w http.ResponseWriter, r *http.Request) {
 
 	var post hb.Post
 	comments, ok := app.cache.comments[id]
-	if !ok {
-		// Do a live fetch of the post and comments.
-		pc, _, err := app.cli.Post(context.TODO(), id)
+	if !ok || expired(app.cache.commentsFetched[id]) {
+		var err error
+		post, comments, err = app.fetchPost(id)
 		if errors.As(err, &hb.StatusError{}) {
 			app.notFound(w)
 			return
@@ -97,10 +139,6 @@ func (app *application) post(w http.ResponseWriter, r *http.Request) {
 			app.serverError(w, err)
 			return
 		}
-		post = pc.Post
-		comments = pc.Comments
-		app.cache.posts[id] = post
-		app.cache.comments[id] = comments
 	} else {
 		post = app.cache.posts[id]
 	}
@@ -114,11 +152,28 @@ func (app *application) post(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// fetchPost does a live fetch of a post and its comments.
+func (app *application) fetchPost(id int) (hb.Post, hb.Comments, error) {
+	pc, _, err := app.cli.Post(context.TODO(), id)
+	if err != nil {
+		return pc.Post, pc.Comments, err
+	}
+	now := time.Now()
+	post := pc.Post
+	comments := pc.Comments
+	app.cache.posts[id] = post
+	app.cache.postsFetched[id] = now
+	app.cache.comments[id] = comments
+	app.cache.commentsFetched[id] = now
+	return pc.Post, pc.Comments, nil
+}
+
 type communitiesPage struct {
 	CSPNonce    string
 	Communities map[int]hb.Community
 }
 
+// communities handles displaying the community list page.
 func (app *application) communities(w http.ResponseWriter, r *http.Request) {
 	app.render(w, http.StatusOK, "communities.tmpl", communitiesPage{
 		CSPNonce:    app.cspNonce,
@@ -126,6 +181,7 @@ func (app *application) communities(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// ppb does exactly what you'd expect.
 func (app *application) ppb(w http.ResponseWriter, r *http.Request) {
 	f, err := ui.EFS.Open("images/ppb.jpg")
 	if err != nil {
