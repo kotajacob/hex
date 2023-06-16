@@ -160,21 +160,4 @@
 	{{template "main" .}}
 </body>
 </html>
-<script nonce="{{.CSPNonce}}">
-const folders = document.getElementsByClassName("comment-folder");
-const fold = (event) => {
-	const label = event.currentTarget;
-	const comment = label.parentElement.parentElement;
-	if (comment.classList.contains("folded")) {
-		comment.classList.remove("folded")
-		label.textContent = "[-]"
-	} else {
-		comment.classList.add("folded")
-		label.textContent = "[+]"
-	}
-}
-for (folder of folders) {
-	folder.addEventListener("click", fold);
-}
-</script>
 {{end}}
