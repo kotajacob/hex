@@ -4,6 +4,8 @@ description="hex"
 command=${command:-/usr/bin/hex}
 command_background=true
 pidfile="/run/${RC_SVCNAME}.pid"
+output_log="/var/log/hex.log"
+error_log="/var/log/hex.err"
 
 depend() {
 	need net
