@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -88,7 +89,10 @@ func (app *application) post(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		// Do a live fetch of the post and comments.
 		pc, _, err := app.cli.Post(context.TODO(), id)
-		if err != nil {
+		if errors.As(err, &hb.StatusError{}) {
+			app.notFound(w)
+			return
+		} else if err != nil {
 			app.serverError(w, err)
 			return
 		}
