@@ -1,11 +1,16 @@
 package main
 
-import "net/http"
+import (
+	"fmt"
+	"net/http"
+	"runtime/debug"
+)
 
 // serverError writes to the error log and writes a StatusInternalServerError to
 // the client.
 func (app *application) serverError(w http.ResponseWriter, err error) {
-	app.errLog.Println(err)
+	trace := fmt.Sprintf("%s\n%s", err.Error(), debug.Stack())
+	app.errLog.Output(2, trace)
 	http.Error(
 		w,
 		http.StatusText(http.StatusInternalServerError),
