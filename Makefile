@@ -32,4 +32,4 @@ watch:
 faker:
 	go run ./cmd/faker/
 
-.PHONY: all install uninstall clean run watch faker
+.PHONY: all hex install uninstall clean run watch faker
