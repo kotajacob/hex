@@ -4,7 +4,7 @@
 		<label class="comment-folder">[-]</label>
 		<a
 			href="/u/{{.CreatorName}}"
-			title="{{if .CreatorTags.Pronouns}}[{{.CreatorTags.Pronouns}}]{{else}}[none/none]{{end}}">
+			title="{{if .CreatorTags.Pronouns}}{{.CreatorTags.Pronouns}}{{else}}none/none{{end}}">
 			{{.CreatorName}}
 		</a>
 		<small>{{ Timestamp . }}</small>

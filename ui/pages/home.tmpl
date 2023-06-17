@@ -13,7 +13,10 @@
 					<a href="/post/{{.ID}}">[talk]</a>
 				</span>
 				<small>
-					by <a href="/u/{{.CreatorName}}">{{.CreatorName}}</a> {{Timestamp .}}
+					by <a
+						href="/u/{{.CreatorName}}"
+						title="{{if .CreatorTags.Pronouns}}{{.CreatorTags.Pronouns}}{{else}}none/none{{end}}">
+						{{.CreatorName}}</a> {{Timestamp .}}
 				</small>
 			</div>
 		{{ end }}

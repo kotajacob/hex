@@ -19,6 +19,9 @@ type Post struct {
 	Published   HBTime        `json:"published"`
 	Updated     *HBTime       `json:"updated"`
 	CreatorName string        `json:"creator_name"`
+	CreatorTags struct {
+		Pronouns string `json:"pronouns"`
+	} `json:"creator_tags"`
 
 	// Image is a URL to a header image. During processing, if the URL contains
 	// an image hosted on hexbear, we set this field and set the URL to blank.
