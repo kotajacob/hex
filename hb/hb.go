@@ -49,7 +49,7 @@ type HBTime time.Time
 
 func (h *HBTime) UnmarshalJSON(b []byte) error {
 	s := strings.Trim(string(b), "\"")
-	t, err := time.Parse("2006-01-02T15:04:05.000000", s)
+	t, err := time.Parse("2006-01-02T15:04:05", s)
 	if err != nil {
 		return err
 	}
