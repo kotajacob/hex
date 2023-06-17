@@ -24,6 +24,7 @@
 		--color-fg: #000;
 		--color-fg-light: #444;
 		--color-bg: #fff;
+		--color-bg-light: #eee;
 		font-size: calc(.333vw + 1em);
 	}
 	*,
@@ -69,11 +70,14 @@
 	hr {
 		border-block-end: var(--s-4) solid var(--color-primary);
 	}
-	ul, blockqoute {
+	ul {
 		padding-inline-start: var(--s0);
 	}
-	blockqoute {
-		border-block-end: var(--s-4) solid var(--color-alt);
+	blockquote {
+		padding: var(--s-2);
+		margin-block-start: var(--s-2);
+		border-inline-start: var(--s-4) solid var(--color-fg-light);
+		background-color: var(--color-bg-light);
 	}
 	small {
 		color: var(--color-fg-light);
