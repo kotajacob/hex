@@ -2,9 +2,12 @@
 <li class="comment">
 	<div class="byline">
 		<label class="comment-folder">[-]</label>
-		<a href="/u/{{.CreatorName}}">{{.CreatorName}}</a>
-		<small>{{if .CreatorTags.Pronouns}}[{{.CreatorTags.Pronouns}}]{{else}}[none/none]{{end}}
-		{{ Timestamp . }}</small>
+		<a
+			href="/u/{{.CreatorName}}"
+			title="{{if .CreatorTags.Pronouns}}[{{.CreatorTags.Pronouns}}]{{else}}[none/none]{{end}}">
+			{{.CreatorName}}
+		</a>
+		<small>{{ Timestamp . }}</small>
 	</div>
 	<div class="comment-text">
 	{{.Content}}

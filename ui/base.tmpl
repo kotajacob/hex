@@ -75,6 +75,10 @@
 	blockqoute {
 		border-block-end: var(--s-4) solid var(--color-alt);
 	}
+	small {
+		color: var(--color-fg-light);
+		font-size: var(--s-1);
+	}
 
 	header {
 		font-family: monospace;
@@ -101,12 +105,15 @@
 		text-decoration: none;
 	}
 
-	.post {
+	.post .links {
 		display: flex;
 	}
-	.post > *:first-child {
+	.post .links > *:first-child {
 		flex: 1;
 		padding-inline-end: 1ch;
+	}
+	.post .byline {
+		font-size: var(--s-1);
 	}
 
 	article {
@@ -148,12 +155,7 @@
 	.folded > * + * {
 		display: none;
 	}
-	small {
-		color: var(--color-fg-light);
-		vertical-align:	15%;
-		font-size: var(--s-1);
-	}
-	.byline time {
+	.comment time {
 		float: right;
 	}
 	</style>

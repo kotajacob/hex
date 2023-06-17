@@ -7,7 +7,6 @@ import (
 	"html/template"
 	"net/http"
 	"strings"
-	"time"
 )
 
 // Post is a single post on hexbear.
@@ -17,6 +16,9 @@ type Post struct {
 	URL         string        `json:"url"`
 	Body        template.HTML `json:"body"`
 	CommunityID int           `json:"community_id"`
+	Published   HBTime        `json:"published"`
+	Updated     *HBTime       `json:"updated"`
+	CreatorName string        `json:"creator_name"`
 
 	// Image is a URL to a header image. During processing, if the URL contains
 	// an image hosted on hexbear, we set this field and set the URL to blank.
@@ -49,23 +51,6 @@ type Comment struct {
 	Children []*Comment
 }
 type Comments []Comment
-
-func Timestamp(c Comment) template.HTML {
-	var b strings.Builder
-	if c.Updated != nil {
-		b.WriteString("<time title=\"")
-		b.WriteString(c.Updated.String())
-		b.WriteString("\">")
-		b.WriteString(c.Updated.Since(time.Now()))
-	} else {
-		b.WriteString("<time title=\"")
-		b.WriteString(c.Published.String())
-		b.WriteString("\">")
-		b.WriteString(c.Published.Since(time.Now()))
-	}
-	b.WriteString("</time>")
-	return template.HTML(b.String())
-}
 
 // processPost makes all nessesary modifications to the Post after it's fetched.
 func processPost(p *Post) error {

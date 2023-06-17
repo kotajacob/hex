@@ -7,10 +7,15 @@
 	<main>
 		<div class="stack">
 		{{ range .Posts }}
-			<span class="post">
-				<a href="{{if .URL}}{{.URL}}{{else}}/post/{{.ID}}{{end}}">{{.Name}}</a>
-				<a href="/post/{{.ID}}">[talk]</a>
-			</span>
+			<div class="post">
+				<span class="links">
+					<a href="{{if .URL}}{{.URL}}{{else}}/post/{{.ID}}{{end}}">{{.Name}}</a>
+					<a href="/post/{{.ID}}">[talk]</a>
+				</span>
+				<small>
+					by <a href="/u/{{.CreatorName}}">{{.CreatorName}}</a> {{Timestamp .}}
+				</small>
+			</div>
 		{{ end }}
 		</div>
 	</main>
