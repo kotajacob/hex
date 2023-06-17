@@ -7,7 +7,7 @@
 			title="{{if .CreatorTags.Pronouns}}{{.CreatorTags.Pronouns}}{{else}}none/none{{end}}">
 			{{.CreatorName}}
 		</a>
-		<small>{{ Timestamp . }}</small>
+		<small><aside>{{.Score}} bears {{Timestamp .}}</aside></small>
 	</div>
 	<div class="comment-text">
 	{{.Content}}

@@ -22,6 +22,7 @@ type Post struct {
 	CreatorTags struct {
 		Pronouns string `json:"pronouns"`
 	} `json:"creator_tags"`
+	Score int `json:"score"`
 
 	// Image is a URL to a header image. During processing, if the URL contains
 	// an image hosted on hexbear, we set this field and set the URL to blank.

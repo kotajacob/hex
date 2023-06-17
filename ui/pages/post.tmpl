@@ -12,7 +12,7 @@
 			<h1>{{.Post.Name}}</h1>
 			{{end}}
 			<small>
-				by <a
+				{{.Post.Score}} bears by <a
 					href="/u/{{.Post.CreatorName}}"
 					title="{{if .Post.CreatorTags.Pronouns}}{{.Post.CreatorTags.Pronouns}}{{else}}none/none{{end}}">
 					{{.Post.CreatorName}}</a> {{Timestamp .Post}}
