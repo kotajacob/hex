@@ -25,6 +25,12 @@
 		--color-fg-light: #444;
 		--color-bg: #fff;
 		--color-bg-light: #eee;
+		--color-dark-primary: hsl(319deg 55% 57%);
+		--color-dark-alt: hsl(8deg 100% 71%);
+		--color-dark-fg: #e9e9e9;
+		--color-dark-fg-light: #ccc;
+		--color-dark-bg: #191919;
+		--color-dark-bg-light: #292929;
 		font-size: calc(.333vw + 1em);
 	}
 	*,
@@ -48,6 +54,12 @@
 		padding: var(--s1);
 		font-family: system-ui, sans-serif;
 	}
+	@media (prefers-color-scheme: dark) {
+		body {
+			color: var(--color-dark-fg);
+			background-color: var(--color-dark-bg);
+		}
+	}
 	body > * + * {
 		margin-block-start: var(--s1);
 	}
@@ -67,8 +79,29 @@
 		outline: 0 none;
 		background-color: var(--color-primary);
 	}
+	@media (prefers-color-scheme: dark) {
+		a {
+			color: var(--color-dark-alt);
+		}
+		a:hover, a:focus {
+			color: var(--color-dark-bg);
+			background-color: var(--color-dark-alt);
+		}
+		a:visited {
+			color: var(--color-dark-primary);
+		}
+		a:visited:hover, a:visited:focus, ::selection {
+			color: var(--color-dark-bg);
+			background-color: var(--color-dark-primary);
+		}
+	}
 	hr {
 		border-block-end: var(--s-4) solid var(--color-primary);
+	}
+	@media (prefers-color-scheme: dark) {
+		hr {
+			border-block-end: var(--s-4) solid var(--color-dark-primary);
+		}
 	}
 	ul {
 		padding-inline-start: var(--s0);
@@ -79,9 +112,20 @@
 		border-inline-start: var(--s-4) solid var(--color-fg-light);
 		background-color: var(--color-bg-light);
 	}
+	@media (prefers-color-scheme: dark) {
+		blockquote {
+			border-inline-start: var(--s-4) solid var(--color-dark-fg-light);
+			background-color: var(--color-dark-bg-light);
+		}
+	}
 	small {
 		color: var(--color-fg-light);
 		font-size: var(--s-1);
+	}
+	@media (prefers-color-scheme: dark) {
+		small {
+			color: var(--color-dark-fg-light);
+		}
 	}
 
 	header {
@@ -145,6 +189,11 @@
 		border-inline-start: var(--s-4) solid var(--color-primary);
 		padding-inline-start: var(--s-1);
 	}
+	@media (prefers-color-scheme: dark) {
+		.nested {
+			border-inline-start: var(--s-4) solid var(--color-dark-primary);
+		}
+	}
 
 	.comment-folder {
 		font-family: monospace, monospace;
@@ -155,6 +204,15 @@
 		color: var(--color-bg);
 		outline: 0 none;
 		background-color: var(--color-alt);
+	}
+	@media (prefers-color-scheme: dark) {
+		.comment-folder {
+			color: var(--color-dark-alt);
+		}
+		.comment-folder:hover, .comment-folder:focus {
+			color: var(--color-dark-bg);
+			background-color: var(--color-dark-alt);
+		}
 	}
 	.folded > * + * {
 		display: none;
