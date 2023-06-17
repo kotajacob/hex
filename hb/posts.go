@@ -7,6 +7,7 @@ import (
 	"html/template"
 	"net/http"
 	"strings"
+	"time"
 )
 
 // Post is a single post on hexbear.
@@ -48,6 +49,23 @@ type Comment struct {
 	Children []*Comment
 }
 type Comments []Comment
+
+func Timestamp(c Comment) template.HTML {
+	var b strings.Builder
+	if c.Updated != nil {
+		b.WriteString("<time title=\"")
+		b.WriteString(c.Updated.String())
+		b.WriteString("\">")
+		b.WriteString(c.Updated.Since(time.Now()))
+	} else {
+		b.WriteString("<time title=\"")
+		b.WriteString(c.Published.String())
+		b.WriteString("\">")
+		b.WriteString(c.Published.Since(time.Now()))
+	}
+	b.WriteString("</time>")
+	return template.HTML(b.String())
+}
 
 // processPost makes all nessesary modifications to the Post after it's fetched.
 func processPost(p *Post) error {

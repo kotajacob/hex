@@ -4,7 +4,7 @@
 		<label class="comment-folder">[-]</label>
 		<a href="/u/{{.CreatorName}}">{{.CreatorName}}</a>
 		<small>{{if .CreatorTags.Pronouns}}[{{.CreatorTags.Pronouns}}]{{else}}[none/none]{{end}}
-		<time>{{if .Updated}}{{.Updated}}{{else}}{{.Published}}{{end}}</time></small>
+		{{ Timestamp . }}</small>
 	</div>
 	<div class="comment-text">
 	{{.Content}}

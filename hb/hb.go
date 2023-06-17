@@ -6,7 +6,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"math"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -57,6 +59,29 @@ func (h *HBTime) UnmarshalJSON(b []byte) error {
 
 func (h HBTime) String() string {
 	return time.Time(h).Format(time.DateTime)
+}
+
+func (h HBTime) Since(t time.Time) string {
+	elapsed := t.Sub(time.Time(h))
+	years := int(math.Floor(elapsed.Hours() / 24 / 365))
+	days := int(math.Floor(elapsed.Hours() / 24))
+	hours := int(math.Floor(elapsed.Hours()))
+	minutes := int(math.Floor(elapsed.Minutes()))
+	seconds := int(math.Floor(elapsed.Seconds()))
+	switch {
+	case years > 0:
+		return strconv.Itoa(years) + " years ago"
+	case days > 0:
+		return strconv.Itoa(days) + " days ago"
+	case hours > 0:
+		return strconv.Itoa(hours) + " hours ago"
+	case minutes > 0:
+		return strconv.Itoa(minutes) + " minutes ago"
+	case seconds > 0:
+		return strconv.Itoa(seconds) + " seconds ago"
+	default:
+		return "0 seconds ago"
+	}
 }
 
 // Do sends an API request and returns the API responce.

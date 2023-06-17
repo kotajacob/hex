@@ -5,7 +5,11 @@ import (
 	"html/template"
 	"io/fs"
 	"path/filepath"
+
+	"git.sr.ht/~kota/hex/hb"
 )
+
+const baseTMPL = "base.tmpl"
 
 //go:embed "base.tmpl" "partials" "pages" "images"
 var EFS embed.FS
@@ -25,11 +29,13 @@ func Templates() (map[string]*template.Template, error) {
 
 	for _, page := range pages {
 		name := filepath.Base(page)
-		files := []string{"base.tmpl"}
+		files := []string{baseTMPL}
 		files = append(files, partials...)
 		files = append(files, page)
 
-		ts, err := template.ParseFS(EFS, files...)
+		ts, err := template.New(baseTMPL).
+			Funcs(template.FuncMap{"Timestamp": hb.Timestamp}).
+			ParseFS(EFS, files...)
 		if err != nil {
 			return nil, err
 		}
