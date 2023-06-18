@@ -10,7 +10,7 @@ RM ?= rm -f
 all: hex
 
 hex:
-	$(GO) build $(GOFLAGS) ./cmd/hex/
+	$(GO) build $(GOFLAGS) .
 
 install: all
 	mkdir -p $(DESTDIR)$(PREFIX)/bin
@@ -24,12 +24,9 @@ clean:
 	$(RM) hex
 
 run:
-	go run ./cmd/hex/
+	go run .
 
 watch:
-	fd -e go -e tmpl | entr -rs "go run ./cmd/hex/ -hb http://localhost:4001/"
+	fd -e go -e tmpl | entr -rs "go run ."
 
-faker:
-	go run ./cmd/faker/
-
-.PHONY: all hex install uninstall clean run watch faker
+.PHONY: all hex install uninstall clean run watch
