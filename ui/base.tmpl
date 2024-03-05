@@ -103,7 +103,19 @@
 			border-block-end: var(--s-4) solid var(--color-dark-primary);
 		}
 	}
+	img {
+		max-width: 100%;
+	}
+	p > img {
+		padding: var(--s-2);
+	}
+	img[title^='emoji'] {
+		width: 6ch;
+	}
 	ul {
+		padding-inline-start: var(--s0);
+	}
+	ol {
 		padding-inline-start: var(--s0);
 	}
 	blockquote {
@@ -181,6 +193,9 @@
 	}
 	.comment > .comment-text {
 		margin-block: 0;
+	}
+	.comment > .comment-text > p > img {
+		vertical-align: middle;
 	}
 	.comments * + * {
 		margin-block-start: var(--s0);

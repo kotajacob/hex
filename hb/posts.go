@@ -1,170 +1,94 @@
 package hb
 
 import (
-	"bytes"
 	"context"
-	"fmt"
-	"html/template"
 	"net/http"
-	"strings"
+	"strconv"
+	"time"
 )
 
-// Post is a single post on hexbear.
+// Post is a single post.
 type Post struct {
-	ID          int           `json:"id"`
-	Name        string        `json:"name"`
-	URL         string        `json:"url"`
-	Body        template.HTML `json:"body"`
-	CommunityID int           `json:"community_id"`
-	Published   HBTime        `json:"published"`
-	Updated     *HBTime       `json:"updated"`
-	CreatorName string        `json:"creator_name"`
-	CreatorTags struct {
-		Pronouns string `json:"pronouns"`
-	} `json:"creator_tags"`
-	Score int `json:"score"`
-
-	// Image is a URL to a header image. During processing, if the URL contains
-	// an image hosted on hexbear, we set this field and set the URL to blank.
-	Image string
+	ID          int        `json:"id"`
+	Local       bool       `json:"local"`
+	Name        string     `json:"name"`
+	URL         string     `json:"url"`
+	Body        string     `json:"body"`
+	CommunityID int        `json:"community_id"`
+	Published   time.Time  `json:"published"`
+	Updated     *time.Time `json:"updated"`
+	CreatorID   int        `json:"creator_id"`
 }
 
-type PostList struct {
-	Posts []Post `json:"posts"`
+// PostAggregates is aggregated scores for a post.
+type PostAggregates struct {
+	Score             int  `json:"score"`
+	Comments          int  `json:"comments"`
+	Upvotes           int  `json:"upvotes"`
+	Downvotes         int  `json:"downvotes"`
+	FeaturedCommunity bool `json:"featured_community"`
+	FeaturedLocal     bool `json:"featured_local"`
 }
 
-type PostComments struct {
-	Post     Post     `json:"post"`
-	Comments Comments `json:"comments"`
+// PostView represents a Post and additional metadata.
+type PostView struct {
+	Post    Post           `json:"post"`
+	Creator Person         `json:"creator"`
+	Counts  PostAggregates `json:"counts"`
 }
 
-type Comment struct {
-	ID          int           `json:"id"`
-	ParentID    *int          `json:"parent_id"`
-	Content     template.HTML `json:"content"`
-	Published   HBTime        `json:"published"`
-	Updated     *HBTime       `json:"updated"`
-	CreatorName string        `json:"creator_name"`
-	CreatorTags struct {
-		Pronouns string `json:"pronouns"`
-	} `json:"creator_tags"`
-	Score   int `json:"score"`
-	HotRank int `json:"hot_rank"`
-
-	// We rebuild the list of comments into a tree for faster display.
-	Children []*Comment
-}
-type Comments []Comment
-
-// processPost makes all nessesary modifications to the Post after it's fetched.
-func processPost(p *Post) error {
-	// Process the post's body with goldmark.
-	var buf bytes.Buffer
-	if err := markdown.Convert(
-		[]byte(p.Body),
-		&buf,
-	); err != nil {
-		return err
-	}
-	p.Body = template.HTML(buf.Bytes())
-
-	// Check if the URL is an image.
-	if strings.HasPrefix(p.URL, "https://www.hexbear.net/pictrs/image/") {
-		p.Image = p.URL
-		p.URL = ""
-	}
-	return nil
+// PostListResp is the response from PostList.
+type PostListResp struct {
+	Posts []PostView `json:"posts"`
 }
 
-// processComments makes all nessesary modifications to the comment list after
-// it's fetched.
-// This notably includes rebuilding the list into a tree. To do so, we remove
-// the "parent_id" and add a children list to each comment.
-func processComments(cs *Comments) {
-	// The comment list is pre-sorted with the most recent list at the
-	// start of the slice. As a result, we can read the slice backwards and
-	// parse it into a tree in a single pass.
-	list := *cs
-	root := new(Comment)
-	for i := len(list) - 1; i >= 0; i-- {
-		root.addChild(list[i])
-	}
-
-	var processComments Comments
-	for _, comment := range root.Children {
-		processComments = append(processComments, *comment)
-	}
-	*cs = processComments
+// PostResp is the response from Post.
+type PostResp struct {
+	PostView PostView `json:"post_view"`
 }
 
-func (parent *Comment) addChild(child Comment) {
-	var id int
-	if child.ParentID != nil {
-		id = *child.ParentID
-	}
-
-	if id == parent.ID {
-		var buf bytes.Buffer
-		if err := markdown.Convert(
-			[]byte(child.Content),
-			&buf,
-		); err == nil {
-			child.Content = template.HTML(buf.Bytes())
-		}
-		parent.Children = append(parent.Children, &child)
-	}
-
-	for _, c := range parent.Children {
-		c.addChild(child)
-	}
-}
-
-// PostLst fetches a slice of posts.
-// Hexbear itself seems to fetch 40 posts when loading the home page.
+// PostList fetches a slice of posts.
 func (c *Client) PostList(
-	// TODO: support sort method and type.
 	ctx context.Context,
 	page int,
 	limit int,
-) (*PostList, *http.Response, error) {
-	path := fmt.Sprintf(
-		"post/list?page=%d&limit=%d&sort=Active&type_=All",
-		page,
-		limit,
-	)
-	postList := new(PostList)
-	rsp, err := c.Do(ctx, path, postList)
-	if err != nil {
-		return postList, rsp, err
+	sortType SortType,
+	listingType ListingType,
+) (*PostListResp, *http.Response, error) {
+	u := c.BaseURL.JoinPath("post/list")
+	q := u.Query()
+	if page != 0 {
+		q.Add("page", strconv.Itoa(page))
 	}
+	if limit != 0 {
+		q.Add("limit", strconv.Itoa(limit))
+	}
+	if sortType != "" {
+		q.Add("sort", string(sortType))
+	}
+	if listingType != "" {
+		q.Add("type_", string(listingType))
+	}
+	u.RawQuery = q.Encode()
 
-	for i := range postList.Posts {
-		p := &postList.Posts[i]
-		if err := processPost(p); err != nil {
-			return postList, rsp, err
-		}
-	}
-	return postList, rsp, err
+	posts := new(PostListResp)
+	resp, err := c.Do(ctx, u, posts)
+	return posts, resp, err
 }
 
-// Post fetches a single post by ID.
+// Post fetches a single post.
 func (c *Client) Post(
 	ctx context.Context,
 	id int,
-) (*PostComments, *http.Response, error) {
-	path := fmt.Sprintf(
-		"post?id=%d",
-		id,
-	)
-	pc := new(PostComments)
-	rsp, err := c.Do(ctx, path, pc)
-	if err != nil {
-		return pc, rsp, err
+) (*PostResp, *http.Response, error) {
+	u := c.BaseURL.JoinPath("post")
+	q := u.Query()
+	if id != 0 {
+		q.Add("id", strconv.Itoa(id))
 	}
+	u.RawQuery = q.Encode()
 
-	if err := processPost(&pc.Post); err != nil {
-		return pc, rsp, err
-	}
-	processComments(&pc.Comments)
-	return pc, rsp, err
+	post := new(PostResp)
+	resp, err := c.Do(ctx, u, post)
+	return post, resp, err
 }

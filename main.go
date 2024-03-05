@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 
+	"git.sr.ht/~kota/hex/cache"
 	"git.sr.ht/~kota/hex/hb"
 	"git.sr.ht/~kota/hex/ui"
 )
@@ -15,8 +16,8 @@ type application struct {
 	infoLog *log.Logger
 	errLog  *log.Logger
 
-	cli       *hb.Client
-	cache     *cache
+	client    *hb.Client
+	cache     *cache.Cache
 	templates map[string]*template.Template
 
 	// In order to use inline css, we need to set a randomly generated nonce
@@ -31,6 +32,7 @@ func main() {
 	flag.Parse()
 
 	infoLog := log.New(os.Stdout, "INFO ", log.Ldate|log.Ltime)
+	debugLog := log.New(os.Stdout, "DEBUG ", log.Ldate|log.Ltime)
 	errLog := log.New(os.Stderr, "ERROR ", log.Ldate|log.Ltime|log.Lshortfile)
 
 	templates, err := ui.Templates()
@@ -38,8 +40,14 @@ func main() {
 		errLog.Fatal(err)
 	}
 
-	cli := hb.NewClient(*hbURL)
-	cache, err := initialCache(cli)
+	cli, err := hb.NewClient(*hbURL, debugLog)
+	if err != nil {
+		errLog.Fatalf(
+			"failed creating hexbear client %v",
+			err,
+		)
+	}
+	cache, err := cache.Initialize(cli, infoLog)
 	if err != nil {
 		errLog.Fatalf(
 			"failed populating initial cache %v",
@@ -50,7 +58,7 @@ func main() {
 		infoLog:   infoLog,
 		errLog:    errLog,
 		cache:     cache,
-		cli:       cli,
+		client:    cli,
 		templates: templates,
 	}
 
