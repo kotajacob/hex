@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"html/template"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -105,7 +106,7 @@ func (c *Cache) fetchComments(cli *hb.Client, postID int) error {
 	}
 
 	c.comments.mutex.Lock()
-	c.comments.cache[postID] = tree(all)
+	c.comments.cache[postID] = sortComments(tree(all), hb.CommentSortTypeTop)
 	c.comments.mutex.Unlock()
 	return nil
 }
@@ -141,4 +142,26 @@ func (parent *Comment) addChild(child *Comment) {
 	for _, c := range parent.Children {
 		c.addChild(child)
 	}
+}
+
+type byUpvotes Comments
+
+func (b byUpvotes) Len() int           { return len(b) }
+func (b byUpvotes) Swap(i, j int)      { b[i], b[j] = b[j], b[i] }
+func (b byUpvotes) Less(i, j int) bool { return b[i].Upvotes > b[j].Upvotes }
+
+func sortComments(comments Comments, method hb.CommentSortType) Comments {
+	switch method {
+	case hb.CommentSortTypeTop:
+		sort.Sort(byUpvotes(comments))
+	default:
+		return comments
+	}
+	for _, comment := range comments {
+		if len(comment.Children) != 0 {
+			children := sortComments(comment.Children, method)
+			comment.Children = children
+		}
+	}
+	return comments
 }
