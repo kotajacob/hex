@@ -30,13 +30,17 @@ type Post struct {
 // The cached version is returned if it exists and has not expired, otherwise,
 // they are fetched. If the post is fetched its comments are also fetched.
 func (c *Cache) Post(cli *hb.Client, id int) (Post, error) {
-	post, ok := c.posts[id]
+	c.posts.mutex.RLock()
+	post, ok := c.posts.cache[id]
+	c.posts.mutex.RUnlock()
 	if !ok || expired(post.Fetched, time.Minute*20) {
 		err := c.fetchPost(cli, id)
 		if err != nil {
 			return post, err
 		}
-		post = c.posts[id]
+		c.posts.mutex.RLock()
+		post = c.posts.cache[id]
+		c.posts.mutex.RUnlock()
 	}
 	return post, nil
 }
@@ -69,7 +73,8 @@ func (c *Cache) fetchPost(cli *hb.Client, postID int) error {
 		return err
 	}
 	body := template.HTML(buf.Bytes())
-	c.posts[view.Post.ID] = Post{
+	c.posts.mutex.Lock()
+	c.posts.cache[view.Post.ID] = Post{
 		ID:          view.Post.ID,
 		Name:        view.Post.Name,
 		URL:         view.Post.URL,
@@ -83,6 +88,7 @@ func (c *Cache) fetchPost(cli *hb.Client, postID int) error {
 		Upvotes:     view.Counts.Upvotes,
 		Fetched:     now,
 	}
+	c.posts.mutex.Unlock()
 	return c.fetchComments(cli, postID)
 }
 
@@ -141,7 +147,8 @@ func (c *Cache) fetchHome(cli *hb.Client) error {
 		}
 		body := template.HTML(buf.Bytes())
 
-		c.posts[view.Post.ID] = Post{
+		c.posts.mutex.Lock()
+		c.posts.cache[view.Post.ID] = Post{
 			ID:          view.Post.ID,
 			Name:        view.Post.Name,
 			URL:         url,
@@ -155,6 +162,7 @@ func (c *Cache) fetchHome(cli *hb.Client) error {
 			Upvotes:     view.Counts.Upvotes,
 			Fetched:     now,
 		}
+		c.posts.mutex.Unlock()
 		home.PostIDs = append(home.PostIDs, view.Post.ID)
 	}
 

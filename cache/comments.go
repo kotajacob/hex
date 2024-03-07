@@ -32,12 +32,22 @@ type Comments []Comment
 // expiration of both the post and its comments, updating the cache as needed.
 // It should be called before this method.
 func (c *Cache) Comments(cli *hb.Client, postID int) (Comments, error) {
-	if comments, ok := c.comments[postID]; ok {
+	c.comments.mutex.RLock()
+	comments, ok := c.comments.cache[postID]
+	c.comments.mutex.RUnlock()
+	if ok {
 		return comments, nil
 	}
 
 	err := c.fetchComments(cli, postID)
-	return c.comments[postID], err
+	if err != nil {
+		return comments, err
+	}
+
+	c.comments.mutex.RLock()
+	comments = c.comments.cache[postID]
+	c.comments.mutex.RUnlock()
+	return comments, nil
 }
 
 // fetchComments retrieves all comments for a post making as many requests as
@@ -94,7 +104,9 @@ func (c *Cache) fetchComments(cli *hb.Client, postID int) error {
 		page += 1
 	}
 
-	c.comments[postID] = tree(all)
+	c.comments.mutex.Lock()
+	c.comments.cache[postID] = tree(all)
+	c.comments.mutex.Unlock()
 	return nil
 }
 

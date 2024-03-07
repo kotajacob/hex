@@ -2,6 +2,7 @@ package cache
 
 import (
 	"log"
+	"sync"
 	"time"
 
 	"git.sr.ht/~kota/hex/hb"
@@ -20,6 +21,21 @@ var markdown = goldmark.New(
 	),
 )
 
+type communityCache struct {
+	mutex *sync.RWMutex
+	cache map[int]Community
+}
+
+type postCache struct {
+	mutex *sync.RWMutex
+	cache map[int]Post
+}
+
+type commentCache struct {
+	mutex *sync.RWMutex
+	cache map[int]Comments
+}
+
 // The Cache is used to serve all requests. When available and fresh cached
 // data is used, but fresh data will be fetched as needed.
 type Cache struct {
@@ -29,21 +45,24 @@ type Cache struct {
 	home Home
 
 	// communities is a mapping of community IDs to the data representing them.
-	communities map[int]Community
+	communities communityCache
 
 	// posts is a mapping of post IDs to the data representing them.
-	posts map[int]Post
+	posts postCache
 
 	// comments is a mapping of post IDs to the root comments for that post.
-	comments map[int]Comments
+	comments commentCache
 }
 
 // Initialize the cache and populate the communities and home page.
 func Initialize(cli *hb.Client, infoLog *log.Logger) (*Cache, error) {
 	c := new(Cache)
-	c.communities = make(map[int]Community)
-	c.posts = make(map[int]Post)
-	c.comments = make(map[int]Comments)
+	c.communities.mutex = new(sync.RWMutex)
+	c.communities.cache = make(map[int]Community)
+	c.posts.mutex = new(sync.RWMutex)
+	c.posts.cache = make(map[int]Post)
+	c.comments.mutex = new(sync.RWMutex)
+	c.comments.cache = make(map[int]Comments)
 	c.infoLog = infoLog
 
 	err := c.fetchCommunities(cli)

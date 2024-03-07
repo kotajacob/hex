@@ -27,23 +27,34 @@ type Home struct {
 // The cached version is returned if it exists, otherwise, all communities are
 // fetched and updated.
 func (c *Cache) Community(cli *hb.Client, id int) (Community, error) {
-	comm, ok := c.communities[id]
-	if !ok {
-		err := c.fetchCommunities(cli)
-		if err != nil {
-			return comm, err
-		}
-		comm = c.communities[id]
+	c.communities.mutex.RLock()
+	comm, ok := c.communities.cache[id]
+	c.communities.mutex.RUnlock()
+	if ok {
+		return comm, nil
 	}
+
+	err := c.fetchCommunities(cli)
+	if err != nil {
+		return comm, err
+	}
+
+	c.communities.mutex.RLock()
+	comm = c.communities.cache[id]
+	c.communities.mutex.RUnlock()
 	return comm, nil
 }
 
 // Communities returns a list of all cached communities.
 func (c *Cache) Communities() ([]Community, error) {
 	var cms []Community
-	for _, cm := range c.communities {
+
+	c.communities.mutex.RLock()
+	for _, cm := range c.communities.cache {
 		cms = append(cms, cm)
 	}
+	c.communities.mutex.RUnlock()
+
 	return cms, nil
 }
 
@@ -72,7 +83,8 @@ func (c *Cache) fetchCommunities(cli *hb.Client) error {
 			break
 		}
 		for _, view := range views.Communities {
-			c.communities[view.Community.ID] = Community{
+			c.communities.mutex.Lock()
+			c.communities.cache[view.Community.ID] = Community{
 				ID:          view.Community.ID,
 				Name:        view.Community.Name,
 				Title:       view.Community.Title,
@@ -80,6 +92,7 @@ func (c *Cache) fetchCommunities(cli *hb.Client) error {
 
 				Fetched: now,
 			}
+			c.communities.mutex.Unlock()
 		}
 		if len(views.Communities) < limit {
 			break
