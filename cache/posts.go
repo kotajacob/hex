@@ -20,10 +20,12 @@ type Post struct {
 	Published   time.Time  `json:"published"`
 	Updated     *time.Time `json:"updated"`
 
-	CreatorName string
-	Image       string
-	Upvotes     int
-	Fetched     time.Time
+	CreatorName   string
+	CommunityName string
+	Image         string
+	Upvotes       int
+	CommentCount  int
+	Fetched       time.Time
 }
 
 // Post returns a given post.
@@ -83,10 +85,12 @@ func (c *Cache) fetchPost(cli *hb.Client, postID int) error {
 		Published:   view.Post.Published,
 		Updated:     view.Post.Updated,
 
-		CreatorName: view.Creator.Name,
-		Image:       image,
-		Upvotes:     view.Counts.Upvotes,
-		Fetched:     now,
+		CreatorName:   view.Creator.Name,
+		CommunityName: view.Community.Name,
+		Image:         image,
+		Upvotes:       view.Counts.Upvotes,
+		CommentCount:  view.Counts.Comments,
+		Fetched:       now,
 	}
 	c.posts.mutex.Unlock()
 	return c.fetchComments(cli, postID)
@@ -157,10 +161,12 @@ func (c *Cache) fetchHome(cli *hb.Client) error {
 			Published:   view.Post.Published,
 			Updated:     view.Post.Updated,
 
-			CreatorName: view.Creator.Name,
-			Image:       image,
-			Upvotes:     view.Counts.Upvotes,
-			Fetched:     now,
+			CreatorName:   view.Creator.Name,
+			CommunityName: view.Community.Name,
+			Image:         image,
+			Upvotes:       view.Counts.Upvotes,
+			CommentCount:  view.Counts.Comments,
+			Fetched:       now,
 		}
 		c.posts.mutex.Unlock()
 		home.PostIDs = append(home.PostIDs, view.Post.ID)

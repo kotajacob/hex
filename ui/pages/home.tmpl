@@ -13,8 +13,8 @@
 					<a href="/post/{{.ID}}">[talk]</a>
 				</span>
 				<small>
-				{{.Upvotes}} bears by <a href="/u/{{.CreatorName}}">
-						{{.CreatorName}}</a> {{Timestamp .}}
+				{{.Upvotes}} bears {{.CommentCount}} comments by <a href="/u/{{.CreatorName}}">
+						{{.CreatorName}}</a> {{Timestamp .}} in <a href="/c/{{.CommunityName}}">{{.CommunityName}}</a>
 				</small>
 			</div>
 		{{ end }}

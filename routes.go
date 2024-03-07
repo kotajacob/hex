@@ -86,10 +86,9 @@ type communitiesPage struct {
 }
 
 type postPage struct {
-	CSPNonce  string
-	Post      cache.Post
-	Comments  []cache.Comment
-	Community cache.Community
+	CSPNonce string
+	Post     cache.Post
+	Comments []cache.Comment
 }
 
 // post handles requests for displaying a post's comment page.
@@ -113,17 +112,10 @@ func (app *application) post(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	community, err := app.cache.Community(app.client, post.CommunityID)
-	if err != nil {
-		app.serverError(w, err)
-		return
-	}
-
 	app.render(w, http.StatusOK, "post.tmpl", postPage{
-		CSPNonce:  app.cspNonce,
-		Post:      post,
-		Comments:  comments,
-		Community: community,
+		CSPNonce: app.cspNonce,
+		Post:     post,
+		Comments: comments,
 	})
 }
 

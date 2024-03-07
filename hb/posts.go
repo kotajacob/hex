@@ -32,9 +32,10 @@ type PostAggregates struct {
 
 // PostView represents a Post and additional metadata.
 type PostView struct {
-	Post    Post           `json:"post"`
-	Creator Person         `json:"creator"`
-	Counts  PostAggregates `json:"counts"`
+	Post      Post           `json:"post"`
+	Creator   Person         `json:"creator"`
+	Community Community      `json:"community"`
+	Counts    PostAggregates `json:"counts"`
 }
 
 // PostListResp is the response from PostList.
