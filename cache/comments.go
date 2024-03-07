@@ -24,7 +24,7 @@ type Comment struct {
 	Children    []*Comment
 }
 
-type Comments []Comment
+type Comments []*Comment
 
 // Comments returns the comments associated with a given post.
 // The cached version is returned if it exists, otherwise, they are fetched.
@@ -87,7 +87,7 @@ func (c *Cache) fetchComments(cli *hb.Client, postID int) error {
 			}
 			content := template.HTML(buf.Bytes())
 
-			all = append(all, Comment{
+			all = append(all, &Comment{
 				ID:        view.Comment.ID,
 				Content:   content,
 				Path:      view.Comment.Path,
@@ -118,24 +118,24 @@ func tree(all Comments) Comments {
 
 	var roots Comments
 	for _, child := range root.Children {
-		roots = append(roots, *child)
+		roots = append(roots, child)
 	}
 	return roots
 }
 
-func (parent *Comment) addChild(child Comment) {
+func (parent *Comment) addChild(child *Comment) {
 	var id int
 	path := strings.Split(child.Path, ".")
 	if len(path) > 1 {
 		var err error
 		id, err = strconv.Atoi(path[len(path)-2])
 		if err != nil {
-			panic("AHHH")
+			return
 		}
 	}
 
 	if id == parent.ID {
-		parent.Children = append(parent.Children, &child)
+		parent.Children = append(parent.Children, child)
 	}
 
 	for _, c := range parent.Children {

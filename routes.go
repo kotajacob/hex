@@ -88,7 +88,7 @@ type communitiesPage struct {
 type postPage struct {
 	CSPNonce string
 	Post     cache.Post
-	Comments []cache.Comment
+	Comments []*cache.Comment
 }
 
 // post handles requests for displaying a post's comment page.
