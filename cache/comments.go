@@ -79,14 +79,10 @@ func (c *Cache) fetchComments(cli *hb.Client, postID int) error {
 		}
 
 		for _, view := range views.Comments {
-			var buf bytes.Buffer
-			if err := markdown.Convert(
-				[]byte(view.Comment.Content),
-				&buf,
-			); err != nil {
+			content, err := c.processMarkdown(view.Comment.Content)
+			if err != nil {
 				return err
 			}
-			content := template.HTML(buf.Bytes())
 
 			all = append(all, &Comment{
 				ID:        view.Comment.ID,
@@ -164,4 +160,16 @@ func sortComments(comments Comments, method hb.CommentSortType) Comments {
 		}
 	}
 	return comments
+}
+
+func (c *Cache) processMarkdown(s string) (template.HTML, error) {
+	var html template.HTML
+	var buf bytes.Buffer
+	if err := c.markdown.Convert(
+		[]byte(s),
+		&buf,
+	); err != nil {
+		return html, err
+	}
+	return template.HTML(c.emojiReplacer.Replace(buf.String())), nil
 }

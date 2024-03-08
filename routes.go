@@ -5,18 +5,27 @@ import (
 	"fmt"
 	"html/template"
 	"io"
+	"io/fs"
 	"net/http"
 	"strconv"
 
 	"git.sr.ht/~kota/hex/cache"
+	"git.sr.ht/~kota/hex/files"
 	"git.sr.ht/~kota/hex/hb"
-	"git.sr.ht/~kota/hex/ui"
 
 	"github.com/julienschmidt/httprouter"
 )
 
 func (app *application) routes() http.Handler {
 	router := httprouter.New()
+
+	emojiFS, err := fs.Sub(files.EFS, "emoji")
+	if err != nil {
+		panic("unable to locate emoji folder")
+	}
+	fileServer := http.FileServer(http.FS(emojiFS))
+	router.Handler(http.MethodGet, "/pictrs/image/*filepath", http.StripPrefix("/pictrs/image", fileServer))
+
 	router.HandlerFunc(http.MethodGet, "/", app.home)
 	router.HandlerFunc(http.MethodGet, "/post/:id", app.post)
 	router.HandlerFunc(http.MethodGet, "/communities", app.communities)
@@ -119,6 +128,10 @@ func (app *application) post(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// emoji handles requests for displaying an emoji.
+func (app *application) emoji(w http.ResponseWriter, r *http.Request) {
+}
+
 // communities handles displaying the community list page.
 func (app *application) communities(w http.ResponseWriter, r *http.Request) {
 	cms, err := app.cache.Communities()
@@ -134,7 +147,7 @@ func (app *application) communities(w http.ResponseWriter, r *http.Request) {
 
 // ppb does exactly what you'd expect.
 func (app *application) ppb(w http.ResponseWriter, r *http.Request) {
-	f, err := ui.EFS.Open("images/ppb.jpg")
+	f, err := files.EFS.Open("images/ppb.jpg")
 	if err != nil {
 		app.serverError(w, fmt.Errorf("failed to open ppb.jpg: %v", err))
 		return

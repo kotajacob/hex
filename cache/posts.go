@@ -1,7 +1,6 @@
 package cache
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"html/template"
@@ -67,14 +66,11 @@ func (c *Cache) fetchPost(cli *hb.Client, postID int) error {
 		image = view.Post.URL
 	}
 
-	var buf bytes.Buffer
-	if err := markdown.Convert(
-		[]byte(view.Post.Body),
-		&buf,
-	); err != nil {
+	body, err := c.processMarkdown(view.Post.Body)
+	if err != nil {
 		return err
 	}
-	body := template.HTML(buf.Bytes())
+
 	c.posts.mutex.Lock()
 	c.posts.cache[view.Post.ID] = Post{
 		ID:          view.Post.ID,
@@ -142,14 +138,10 @@ func (c *Cache) fetchHome(cli *hb.Client) error {
 			url = ""
 		}
 
-		var buf bytes.Buffer
-		if err := markdown.Convert(
-			[]byte(view.Post.Body),
-			&buf,
-		); err != nil {
+		body, err := c.processMarkdown(view.Post.Body)
+		if err != nil {
 			return err
 		}
-		body := template.HTML(buf.Bytes())
 
 		c.posts.mutex.Lock()
 		c.posts.cache[view.Post.ID] = Post{

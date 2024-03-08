@@ -2,23 +2,12 @@ package cache
 
 import (
 	"log"
+	"strings"
 	"sync"
 	"time"
 
 	"git.sr.ht/~kota/hex/hb"
 	"github.com/yuin/goldmark"
-	"github.com/yuin/goldmark/extension"
-)
-
-var markdown = goldmark.New(
-	goldmark.WithExtensions(
-		extension.NewLinkify(
-			extension.WithLinkifyAllowedProtocols([][]byte{
-				[]byte("http:"),
-				[]byte("https:"),
-			}),
-		),
-	),
 )
 
 type communityCache struct {
@@ -39,7 +28,9 @@ type commentCache struct {
 // The Cache is used to serve all requests. When available and fresh cached
 // data is used, but fresh data will be fetched as needed.
 type Cache struct {
-	infoLog *log.Logger
+	infoLog       *log.Logger
+	markdown      goldmark.Markdown
+	emojiReplacer *strings.Replacer
 
 	// home is a list of posts on the homepage.
 	home Home
@@ -55,7 +46,12 @@ type Cache struct {
 }
 
 // Initialize the cache and populate the communities and home page.
-func Initialize(cli *hb.Client, infoLog *log.Logger) (*Cache, error) {
+func Initialize(
+	cli *hb.Client,
+	infoLog *log.Logger,
+	markdown goldmark.Markdown,
+	emojiReplacer *strings.Replacer,
+) (*Cache, error) {
 	c := new(Cache)
 	c.communities.mutex = new(sync.RWMutex)
 	c.communities.cache = make(map[int]Community)
@@ -64,6 +60,8 @@ func Initialize(cli *hb.Client, infoLog *log.Logger) (*Cache, error) {
 	c.comments.mutex = new(sync.RWMutex)
 	c.comments.cache = make(map[int]Comments)
 	c.infoLog = infoLog
+	c.markdown = markdown
+	c.emojiReplacer = emojiReplacer
 
 	err := c.fetchCommunities(cli)
 	if err != nil {

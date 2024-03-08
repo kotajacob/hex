@@ -6,10 +6,13 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 
 	"git.sr.ht/~kota/hex/cache"
+	"git.sr.ht/~kota/hex/files"
 	"git.sr.ht/~kota/hex/hb"
-	"git.sr.ht/~kota/hex/ui"
+	"github.com/yuin/goldmark"
+	"github.com/yuin/goldmark/extension"
 )
 
 type application struct {
@@ -35,10 +38,23 @@ func main() {
 	debugLog := log.New(os.Stdout, "DEBUG ", log.Ldate|log.Ltime)
 	errLog := log.New(os.Stderr, "ERROR ", log.Ldate|log.Ltime|log.Lshortfile)
 
-	templates, err := ui.Templates()
+	templates, err := files.Templates()
 	if err != nil {
 		errLog.Fatal(err)
 	}
+
+	markdown := goldmark.New(
+		goldmark.WithExtensions(
+			extension.NewLinkify(
+				extension.WithLinkifyAllowedProtocols([][]byte{
+					[]byte("http:"),
+					[]byte("https:"),
+				}),
+			),
+		),
+	)
+
+	emojiReplacer := strings.NewReplacer(files.Emojis()...)
 
 	cli, err := hb.NewClient(*hbURL, debugLog)
 	if err != nil {
@@ -47,7 +63,7 @@ func main() {
 			err,
 		)
 	}
-	cache, err := cache.Initialize(cli, infoLog)
+	cache, err := cache.Initialize(cli, infoLog, markdown, emojiReplacer)
 	if err != nil {
 		errLog.Fatalf(
 			"failed populating initial cache %v",
