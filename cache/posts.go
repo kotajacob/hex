@@ -49,7 +49,6 @@ func (c *Cache) Post(cli *hb.Client, id int) (Post, error) {
 // fetchPost retrieves a given post and all of its comments.
 func (c *Cache) fetchPost(cli *hb.Client, postID int) error {
 	c.infoLog.Println("fetching post:", postID)
-	now := time.Now()
 
 	pr, resp, err := cli.Post(context.Background(), postID)
 	if err != nil || pr == nil {
@@ -59,36 +58,11 @@ func (c *Cache) fetchPost(cli *hb.Client, postID int) error {
 			resp,
 		)
 	}
-	view := pr.PostView
 
-	var image string
-	if strings.HasPrefix(view.Post.URL, "https://hexbear.net/pictrs/image/") {
-		image = view.Post.URL
-	}
-
-	body, err := c.processMarkdown(view.Post.Body)
+	err = c.storePost(pr.PostView)
 	if err != nil {
 		return err
 	}
-
-	c.posts.mutex.Lock()
-	c.posts.cache[view.Post.ID] = Post{
-		ID:          view.Post.ID,
-		Name:        view.Post.Name,
-		URL:         view.Post.URL,
-		Body:        body,
-		CommunityID: view.Post.CommunityID,
-		Published:   view.Post.Published,
-		Updated:     view.Post.Updated,
-
-		CreatorName:   view.Creator.Name,
-		CommunityName: view.Community.Name,
-		Image:         image,
-		Upvotes:       view.Counts.Upvotes,
-		CommentCount:  view.Counts.Comments,
-		Fetched:       now,
-	}
-	c.posts.mutex.Unlock()
 	return c.fetchComments(cli, postID)
 }
 
@@ -117,6 +91,7 @@ func (c *Cache) fetchHome(cli *hb.Client) error {
 	}
 	views, resp, err := cli.PostList(
 		context.Background(),
+		0,
 		1,
 		limit,
 		hb.SortTypeActive,
@@ -131,39 +106,45 @@ func (c *Cache) fetchHome(cli *hb.Client) error {
 	}
 
 	for _, view := range views.Posts {
-		url := view.Post.URL
-		var image string
-		if strings.HasPrefix(view.Post.URL, "https://hexbear.net/pictrs/image/") {
-			image = url
-			url = ""
-		}
-
-		body, err := c.processMarkdown(view.Post.Body)
-		if err != nil {
-			return err
-		}
-
-		c.posts.mutex.Lock()
-		c.posts.cache[view.Post.ID] = Post{
-			ID:          view.Post.ID,
-			Name:        view.Post.Name,
-			URL:         url,
-			Body:        body,
-			CommunityID: view.Post.CommunityID,
-			Published:   view.Post.Published,
-			Updated:     view.Post.Updated,
-
-			CreatorName:   view.Creator.Name,
-			CommunityName: view.Community.Name,
-			Image:         image,
-			Upvotes:       view.Counts.Upvotes,
-			CommentCount:  view.Counts.Comments,
-			Fetched:       now,
-		}
-		c.posts.mutex.Unlock()
+		c.storePost(view)
 		home.PostIDs = append(home.PostIDs, view.Post.ID)
 	}
 
 	c.home = home
+	return nil
+}
+
+// storePost converts an hb.PostView into a Post and stores it in the cache.
+func (c *Cache) storePost(view hb.PostView) error {
+	url := view.Post.URL
+	var image string
+	if strings.HasPrefix(view.Post.URL, "https://hexbear.net/pictrs/image/") {
+		image = url
+		url = ""
+	}
+
+	body, err := c.processMarkdown(view.Post.Body)
+	if err != nil {
+		return err
+	}
+
+	c.posts.mutex.Lock()
+	c.posts.cache[view.Post.ID] = Post{
+		ID:          view.Post.ID,
+		Name:        view.Post.Name,
+		URL:         url,
+		Body:        body,
+		CommunityID: view.Post.CommunityID,
+		Published:   view.Post.Published,
+		Updated:     view.Post.Updated,
+
+		CreatorName:   view.Creator.Name,
+		CommunityName: view.Community.Name,
+		Image:         image,
+		Upvotes:       view.Counts.Upvotes,
+		CommentCount:  view.Counts.Comments,
+		Fetched:       time.Now(),
+	}
+	c.posts.mutex.Unlock()
 	return nil
 }

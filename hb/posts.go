@@ -51,6 +51,7 @@ type PostResp struct {
 // PostList fetches a slice of posts.
 func (c *Client) PostList(
 	ctx context.Context,
+	communityID int,
 	page int,
 	limit int,
 	sortType SortType,
@@ -58,6 +59,9 @@ func (c *Client) PostList(
 ) (*PostListResp, *http.Response, error) {
 	u := c.BaseURL.JoinPath("post/list")
 	q := u.Query()
+	if communityID != 0 {
+		q.Add("community_id", strconv.Itoa(communityID))
+	}
 	if page != 0 {
 		q.Add("page", strconv.Itoa(page))
 	}
