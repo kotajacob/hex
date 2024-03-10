@@ -51,6 +51,7 @@ func main() {
 					[]byte("https:"),
 				}),
 			),
+			extension.Strikethrough,
 		),
 	)
 

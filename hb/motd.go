@@ -17,6 +17,7 @@ var markdown = goldmark.New(
 				[]byte("https:"),
 			}),
 		),
+		extension.Strikethrough,
 	),
 )
 
