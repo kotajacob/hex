@@ -29,8 +29,7 @@
 	</main>
 	<script nonce="{{.CSPNonce}}">
 	const folders = document.getElementsByClassName("comment-folder");
-	const fold = (event) => {
-		const label = event.currentTarget;
+	function fold(label) {
 		const comment = label.parentElement.parentElement;
 		if (comment.classList.contains("folded")) {
 			comment.classList.remove("folded")
@@ -41,7 +40,44 @@
 		}
 	}
 	for (folder of folders) {
-		folder.addEventListener("click", fold);
+		folder.addEventListener("click", e => {
+			fold(e.currentTarget);
+		})
+	}
+
+	const comments = document.getElementsByClassName("comment-text");
+	let touchstartX = 0;
+	let touchstartY = 0;
+	let touchendX = 0;
+	let touchendY = 0;
+
+	function checkDirection(event) {
+		const diffY = (touchstartY - touchendY) / window.screen.availHeight;
+		const diffX = (touchstartX - touchendX) / window.screen.availWidth;
+		if (diffY > 0.05 || diffY < -0.05) {
+			return;
+		}
+		if (diffX < 0.2) {
+			return;
+		}
+		if (touchendX < touchstartX) {
+			const c = event.currentTarget.parentElement;
+			console.log(c.firstElementChild.firstElementChild);
+			fold(c.firstElementChild.firstElementChild);
+		}
+	}
+
+	for (comment of comments) {
+		comment.addEventListener('touchstart', e => {
+			touchstartX = e.changedTouches[0].screenX;
+			touchstartY = e.changedTouches[0].screenY;
+		})
+
+		comment.addEventListener('touchend', e => {
+			touchendX = e.changedTouches[0].screenX;
+			touchendY = e.changedTouches[0].screenY;
+			checkDirection(e);
+		})
 	}
 	</script>
 {{end}}
