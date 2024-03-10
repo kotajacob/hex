@@ -2,7 +2,10 @@ package hb
 
 // Person is a single user.
 type Person struct {
-	ID    int    `json:"id"`
-	Name  string `json:"name"`
-	Admin bool   `json:"admin"`
+	ActorID     string `json:"actor_id"`
+	ID          int    `json:"id"`
+	Name        string `json:"name"`
+	DisplayName string `json:"display_name"`
+	Admin       bool   `json:"admin"`
+	Local       bool   `json:"local"`
 }

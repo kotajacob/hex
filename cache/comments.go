@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"html/template"
+	"net/url"
 	"sort"
 	"strconv"
 	"strings"
@@ -91,7 +92,7 @@ func (c *Cache) fetchComments(cli *hb.Client, postID int) error {
 				Published: view.Comment.Published,
 				Updated:   view.Comment.Updated,
 
-				CreatorName: view.Creator.Name,
+				CreatorName: processCreatorName(view.Creator),
 				Upvotes:     view.Counts.Upvotes,
 			})
 		}
@@ -172,4 +173,18 @@ func (c *Cache) processMarkdown(s string) (template.HTML, error) {
 		return html, err
 	}
 	return template.HTML(c.emojiReplacer.Replace(buf.String())), nil
+}
+
+func processCreatorName(person hb.Person) string {
+	if person.Local {
+		if person.DisplayName != "" {
+			return person.DisplayName
+		}
+		return person.Name
+	}
+	u, err := url.Parse(person.ActorID)
+	if err != nil {
+		return person.Name
+	}
+	return person.Name + "@" + u.Hostname()
 }

@@ -138,7 +138,7 @@ func (c *Cache) storePost(view hb.PostView) error {
 		Published:   view.Post.Published,
 		Updated:     view.Post.Updated,
 
-		CreatorName:   view.Creator.Name,
+		CreatorName:   processCreatorName(view.Creator),
 		CommunityName: view.Community.Name,
 		Image:         image,
 		Upvotes:       view.Counts.Upvotes,
