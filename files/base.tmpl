@@ -152,6 +152,26 @@
 	header > * + * {
 		margin-block-start: var(--s1);
 	}
+	footer {
+		font-family: monospace;
+	}
+	footer > * {
+		text-align: center;
+	}
+	footer a {
+		text-decoration: none;
+	}
+	footer > * + * {
+		margin-block-start: var(--s1);
+	}
+
+	.navigation {
+		display: flex;
+		flex-flow: row wrap;
+	}
+	.navigation > * {
+		flex: 1;
+	}
 
 	.stack {
 		display: flex;

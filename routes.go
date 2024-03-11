@@ -62,12 +62,24 @@ func (app *application) render(
 type homePage struct {
 	CSPNonce string
 	MOTD     template.HTML
+	Page     int
 	Posts    []cache.Post
 }
 
 // home handles displaying the home page.
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
-	home, err := app.cache.Home(app.client)
+	page := 1
+	q := r.URL.Query()
+	if q.Has("page") {
+		var err error
+		page, err = strconv.Atoi(q.Get("page"))
+		if err != nil {
+			app.notFound(w)
+			return
+		}
+	}
+
+	home, err := app.cache.Home(app.client, page)
 	if err != nil {
 		app.serverError(w, err)
 		return
@@ -85,6 +97,7 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	app.render(w, http.StatusOK, "home.tmpl", homePage{
 		CSPNonce: app.cspNonce,
 		MOTD:     hb.GetMOTD(),
+		Page:     page,
 		Posts:    posts,
 	})
 }
@@ -110,7 +123,7 @@ func (app *application) post(w http.ResponseWriter, r *http.Request) {
 	}
 
 	post, err := app.cache.Post(app.client, id)
-	if err != nil {
+	if err != nil { // TODO: Not found error.
 		app.serverError(w, err)
 		return
 	}

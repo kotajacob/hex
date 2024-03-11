@@ -10,21 +10,6 @@ import (
 	"github.com/yuin/goldmark"
 )
 
-type communityCache struct {
-	mutex *sync.RWMutex
-	cache map[int]Community
-}
-
-type postCache struct {
-	mutex *sync.RWMutex
-	cache map[int]Post
-}
-
-type commentCache struct {
-	mutex *sync.RWMutex
-	cache map[int]Comments
-}
-
 // The Cache is used to serve all requests. When available and fresh cached
 // data is used, but fresh data will be fetched as needed.
 type Cache struct {
@@ -32,8 +17,8 @@ type Cache struct {
 	markdown      goldmark.Markdown
 	emojiReplacer *strings.Replacer
 
-	// home is a list of posts on the homepage.
-	home Home
+	// home is a page numbers to lists of posts on the homepage.
+	home homeCache
 
 	// communities is a mapping of community IDs to the data representing them.
 	communities communityCache
@@ -45,6 +30,116 @@ type Cache struct {
 	comments commentCache
 }
 
+type homeCache struct {
+	mutex *sync.RWMutex
+	cache map[int]HomePage
+}
+
+func newHomeCache() homeCache {
+	var c homeCache
+	c.mutex = new(sync.RWMutex)
+	c.cache = make(map[int]HomePage)
+	return c
+}
+
+func (c homeCache) get(id int) (HomePage, bool) {
+	c.mutex.RLock()
+	home, ok := c.cache[id]
+	c.mutex.RUnlock()
+	return home, ok
+}
+
+func (c homeCache) set(id int, home HomePage) {
+	c.mutex.Lock()
+	c.cache[id] = home
+	c.mutex.Unlock()
+}
+
+type communityCache struct {
+	mutex *sync.RWMutex
+	cache map[int]Community
+}
+
+func newCommunityCache() communityCache {
+	var c communityCache
+	c.mutex = new(sync.RWMutex)
+	c.cache = make(map[int]Community)
+	return c
+}
+
+func (c communityCache) get(id int) (Community, bool) {
+	c.mutex.RLock()
+	community, ok := c.cache[id]
+	c.mutex.RUnlock()
+	return community, ok
+}
+
+func (c communityCache) getAll() []Community {
+	var cms []Community
+	c.mutex.RLock()
+	for _, cm := range c.cache {
+		cms = append(cms, cm)
+	}
+	c.mutex.RUnlock()
+	return cms
+}
+
+func (c communityCache) set(id int, community Community) {
+	c.mutex.Lock()
+	c.cache[id] = community
+	c.mutex.Unlock()
+}
+
+type postCache struct {
+	mutex *sync.RWMutex
+	cache map[int]Post
+}
+
+func newPostCache() postCache {
+	var c postCache
+	c.mutex = new(sync.RWMutex)
+	c.cache = make(map[int]Post)
+	return c
+}
+
+func (c postCache) get(id int) (Post, bool) {
+	c.mutex.RLock()
+	post, ok := c.cache[id]
+	c.mutex.RUnlock()
+	return post, ok
+}
+
+func (c postCache) set(id int, post Post) {
+	c.mutex.Lock()
+	c.cache[id] = post
+	c.mutex.Unlock()
+}
+
+type commentCache struct {
+	mutex *sync.RWMutex
+	cache map[int]Comments
+}
+
+func newCommentCache() commentCache {
+	var c commentCache
+	c.mutex = new(sync.RWMutex)
+	c.cache = make(map[int]Comments)
+	return c
+}
+
+func (c commentCache) get(id int) (Comments, bool) {
+	c.mutex.RLock()
+	comments, ok := c.cache[id]
+	c.mutex.RUnlock()
+	return comments, ok
+}
+
+func (c commentCache) set(id int, comments Comments) {
+	c.mutex.Lock()
+	c.cache[id] = comments
+	c.mutex.Unlock()
+}
+
 // Initialize the cache and populate the communities and home page.
 func Initialize(
 	cli *hb.Client,
@@ -53,12 +148,10 @@ func Initialize(
 	emojiReplacer *strings.Replacer,
 ) (*Cache, error) {
 	c := new(Cache)
-	c.communities.mutex = new(sync.RWMutex)
-	c.communities.cache = make(map[int]Community)
-	c.posts.mutex = new(sync.RWMutex)
-	c.posts.cache = make(map[int]Post)
-	c.comments.mutex = new(sync.RWMutex)
-	c.comments.cache = make(map[int]Comments)
+	c.home = newHomeCache()
+	c.communities = newCommunityCache()
+	c.posts = newPostCache()
+	c.comments = newCommentCache()
 	c.infoLog = infoLog
 	c.markdown = markdown
 	c.emojiReplacer = emojiReplacer
@@ -68,7 +161,7 @@ func Initialize(
 		return nil, err
 	}
 
-	err = c.fetchHome(cli)
+	err = c.fetchHome(cli, 1)
 	if err != nil {
 		return nil, err
 	}

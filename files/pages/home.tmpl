@@ -2,6 +2,11 @@
 	<header>
 		<h1><a href="/">diet hexbear</a></h1>
 		<aside>{{ .MOTD }}</aside>
+		<aside class="navigation">
+			{{if gt .Page 1}}<a href="/?page={{Decrement .Page}}">prev</a>{{end}}
+			<a href="/communities">communities</a>
+			<a href="/?page={{Increment .Page}}">next</a>
+		</aside>
 	</header>
 	<hr>
 	<main>
@@ -20,4 +25,11 @@
 		{{ end }}
 		</div>
 	</main>
+	<hr>
+	<footer>
+		<aside class="navigation">
+			{{if gt .Page 1}}<a href="/?page={{Decrement .Page}}">prev</a>{{end}}
+				<a href="/?page={{Increment .Page}}">next</a>
+		</aside>
+	</footer>
 {{end}}

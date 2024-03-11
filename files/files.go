@@ -34,7 +34,11 @@ func Templates() (map[string]*template.Template, error) {
 		files = append(files, page)
 
 		ts, err := template.New(baseTMPL).
-			Funcs(template.FuncMap{"Timestamp": display.Timestamp}).
+			Funcs(template.FuncMap{
+				"Increment": display.Increment,
+				"Decrement": display.Decrement,
+				"Timestamp": display.Timestamp,
+			}).
 			ParseFS(EFS, files...)
 		if err != nil {
 			return nil, err

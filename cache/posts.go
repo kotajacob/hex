@@ -31,17 +31,13 @@ type Post struct {
 // The cached version is returned if it exists and has not expired, otherwise,
 // they are fetched. If the post is fetched its comments are also fetched.
 func (c *Cache) Post(cli *hb.Client, id int) (Post, error) {
-	c.posts.mutex.RLock()
-	post, ok := c.posts.cache[id]
-	c.posts.mutex.RUnlock()
+	post, ok := c.posts.get(id)
 	if !ok || expired(post.Fetched, time.Minute*20) {
 		err := c.fetchPost(cli, id)
 		if err != nil {
 			return post, err
 		}
-		c.posts.mutex.RLock()
-		post = c.posts.cache[id]
-		c.posts.mutex.RUnlock()
+		post, _ = c.posts.get(id)
 	}
 	return post, nil
 }
@@ -70,36 +66,37 @@ func (c *Cache) fetchPost(cli *hb.Client, postID int) error {
 // The cached version is returned if it exists and has not expired, otherwise,
 // they are fetched fresh. If the posts are fetched their comments are NOT
 // fetched.
-func (c *Cache) Home(cli *hb.Client) (Home, error) {
-	if expired(c.home.Fetched, time.Minute*20) {
-		err := c.fetchHome(cli)
-		if err != nil {
-			return c.home, err
-		}
+func (c *Cache) Home(cli *hb.Client, page int) (HomePage, error) {
+	home, ok := c.home.get(page)
+	if ok && !expired(home.Fetched, time.Minute*20) {
+		return home, nil
 	}
-	return c.home, nil
+	err := c.fetchHome(cli, page)
+	home, _ = c.home.get(page)
+	return home, err
 }
 
 // fetchHome retrieves all of the posts needed for the home page.
-func (c *Cache) fetchHome(cli *hb.Client) error {
-	c.infoLog.Println("fetching front-page posts")
+func (c *Cache) fetchHome(cli *hb.Client, page int) error {
+	c.infoLog.Println("fetching home posts page:", page)
 	now := time.Now()
 
 	limit := 50 // 50 seems to be the max we can request.
-	home := Home{
+	home := HomePage{
 		Fetched: now,
 	}
 	views, resp, err := cli.PostList(
 		context.Background(),
 		0,
-		1,
+		page,
 		limit,
 		hb.SortTypeActive,
 		hb.ListingTypeLocal,
 	)
 	if err != nil || views == nil {
 		return fmt.Errorf(
-			"failing fetching font-page posts: %v resp: %v",
+			"failing fetching home posts page: %v: err %v: resp: %v",
+			page,
 			err,
 			resp,
 		)
@@ -110,7 +107,7 @@ func (c *Cache) fetchHome(cli *hb.Client) error {
 		home.PostIDs = append(home.PostIDs, view.Post.ID)
 	}
 
-	c.home = home
+	c.home.set(page, home)
 	return nil
 }
 
@@ -128,8 +125,7 @@ func (c *Cache) storePost(view hb.PostView) error {
 		return err
 	}
 
-	c.posts.mutex.Lock()
-	c.posts.cache[view.Post.ID] = Post{
+	c.posts.set(view.Post.ID, Post{
 		ID:          view.Post.ID,
 		Name:        view.Post.Name,
 		URL:         url,
@@ -144,7 +140,6 @@ func (c *Cache) storePost(view hb.PostView) error {
 		Upvotes:       view.Counts.Upvotes,
 		CommentCount:  view.Counts.Comments,
 		Fetched:       time.Now(),
-	}
-	c.posts.mutex.Unlock()
+	})
 	return nil
 }

@@ -34,9 +34,7 @@ type Comments []*Comment
 // expiration of both the post and its comments, updating the cache as needed.
 // It should be called before this method.
 func (c *Cache) Comments(cli *hb.Client, postID int) (Comments, error) {
-	c.comments.mutex.RLock()
-	comments, ok := c.comments.cache[postID]
-	c.comments.mutex.RUnlock()
+	comments, ok := c.comments.get(postID)
 	if ok {
 		return comments, nil
 	}
@@ -46,9 +44,7 @@ func (c *Cache) Comments(cli *hb.Client, postID int) (Comments, error) {
 		return comments, err
 	}
 
-	c.comments.mutex.RLock()
-	comments = c.comments.cache[postID]
-	c.comments.mutex.RUnlock()
+	comments, _ = c.comments.get(postID)
 	return comments, nil
 }
 
@@ -102,9 +98,7 @@ func (c *Cache) fetchComments(cli *hb.Client, postID int) error {
 		page += 1
 	}
 
-	c.comments.mutex.Lock()
-	c.comments.cache[postID] = sortComments(tree(all), hb.CommentSortTypeTop)
-	c.comments.mutex.Unlock()
+	c.comments.set(postID, sortComments(tree(all), hb.CommentSortTypeTop))
 	return nil
 }
 

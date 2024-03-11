@@ -10,6 +10,16 @@ import (
 	"git.sr.ht/~kota/hex/cache"
 )
 
+// Increment a number by 1.
+func Increment(i int) int {
+	return i + 1
+}
+
+// Decrement a number by 1.
+func Decrement(i int) int {
+	return i - 1
+}
+
 // Timestamp implements a fancy HTML timstamp renderer for the hb types.
 func Timestamp(i interface{}) template.HTML {
 	switch v := i.(type) {
