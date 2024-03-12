@@ -1,6 +1,7 @@
 package main
 
 import (
+	"html/template"
 	"net/http"
 	"time"
 
@@ -11,7 +12,7 @@ import (
 type userPage struct {
 	CSPNonce     string
 	Name         string
-	Bio          string
+	Bio          template.HTML
 	CommentCount int
 	PostCount    int
 	Created      time.Time

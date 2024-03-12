@@ -12,8 +12,8 @@
 			<h1>{{.Post.Name}}</h1>
 			{{end}}
 			<small>
-				{{.Post.Upvotes}} bears by <a href="/u/{{.Post.CreatorName}}">
-					{{.Post.CreatorName}}</a> {{Timestamp .Post}}
+				{{.Post.Upvotes}} bears by <a href="{{.Post.CreatorURL}}">
+					{{.Post.CreatorDisplayName}}</a> {{Timestamp .Post}}
 			</small>
 			{{if .Post.Image}}<img src="{{.Post.Image}}" alt="Title Picture">{{end}}
 			{{if .Post.Body}}

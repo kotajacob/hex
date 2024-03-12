@@ -3,6 +3,7 @@ package cache
 import (
 	"context"
 	"fmt"
+	"html/template"
 	"net/url"
 	"time"
 
@@ -12,13 +13,13 @@ import (
 const PERSON_TTL = time.Minute * 40
 
 type Person struct {
-	ActorID     string    `json:"actor_id"` // URL for home server.
-	Name        string    `json:"name"`
-	DisplayName string    `json:"display_name"`
-	Bio         string    `json:"bio"`
-	Local       bool      `json:"local"`
-	Published   time.Time `json:"published"`
-	Updated     time.Time `json:"updated"`
+	ActorID     string        `json:"actor_id"` // URL for home server.
+	Name        string        `json:"name"`
+	DisplayName string        `json:"display_name"`
+	Bio         template.HTML `json:"bio"`
+	Local       bool          `json:"local"`
+	Published   time.Time     `json:"published"`
+	Updated     time.Time     `json:"updated"`
 
 	CommentCount int
 	PostCount    int
@@ -60,11 +61,16 @@ func (c *Cache) fetchPerson(cli *hb.Client, name string) error {
 		postIDs = append(postIDs, postView.Post.ID)
 	}
 
+	bio, err := c.processMarkdown(pr.PersonView.Person.Bio)
+	if err != nil {
+		return err
+	}
+
 	c.persons.set(name, Person{
 		ActorID:     pr.PersonView.Person.ActorID,
 		Name:        pr.PersonView.Person.Name,
-		DisplayName: pr.PersonView.Person.DisplayName,
-		Bio:         pr.PersonView.Person.Bio,
+		DisplayName: processCreatorName(pr.PersonView.Person),
+		Bio:         bio,
 		Local:       pr.PersonView.Person.Local,
 		Published:   pr.PersonView.Person.Published,
 		Updated:     pr.PersonView.Person.Updated,
@@ -89,4 +95,8 @@ func processCreatorName(person hb.Person) string {
 		return person.Name
 	}
 	return person.Name + "@" + u.Hostname()
+}
+
+func processCreatorURL(person hb.Person) string {
+	return "/u/" + person.Name
 }

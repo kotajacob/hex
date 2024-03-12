@@ -19,9 +19,10 @@ type Comment struct {
 	Updated   *time.Time `json:"updated"`
 	Path      string     `json:"path"`
 
-	CreatorName string
-	Upvotes     int
-	Children    []*Comment
+	CreatorDisplayName string
+	CreatorURL         string
+	Upvotes            int
+	Children           []*Comment
 }
 
 type Comments []*Comment
@@ -86,8 +87,9 @@ func (c *Cache) fetchComments(cli *hb.Client, postID int) error {
 				Published: view.Comment.Published,
 				Updated:   view.Comment.Updated,
 
-				CreatorName: processCreatorName(view.Creator),
-				Upvotes:     view.Counts.Upvotes,
+				CreatorDisplayName: processCreatorName(view.Creator),
+				CreatorURL:         processCreatorURL(view.Creator),
+				Upvotes:            view.Counts.Upvotes,
 			})
 		}
 		if len(views.Comments) < limit {

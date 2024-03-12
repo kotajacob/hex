@@ -25,12 +25,13 @@ type Post struct {
 	Published   time.Time  `json:"published"`
 	Updated     *time.Time `json:"updated"`
 
-	CreatorName   string
-	CommunityName string
-	Image         string
-	Upvotes       int
-	CommentCount  int
-	Fetched       time.Time
+	CreatorDisplayName string
+	CreatorURL         string
+	CommunityName      string
+	Image              string
+	Upvotes            int
+	CommentCount       int
+	Fetched            time.Time
 }
 
 // Post returns a given post.
@@ -212,12 +213,13 @@ func (c *Cache) storePost(view hb.PostView) error {
 		Published:   view.Post.Published,
 		Updated:     view.Post.Updated,
 
-		CreatorName:   processCreatorName(view.Creator),
-		CommunityName: view.Community.Name,
-		Image:         image,
-		Upvotes:       view.Counts.Upvotes,
-		CommentCount:  view.Counts.Comments,
-		Fetched:       time.Now(),
+		CreatorDisplayName: processCreatorName(view.Creator),
+		CreatorURL:         processCreatorURL(view.Creator),
+		CommunityName:      view.Community.Name,
+		Image:              image,
+		Upvotes:            view.Counts.Upvotes,
+		CommentCount:       view.Counts.Comments,
+		Fetched:            time.Now(),
 	})
 	return nil
 }
