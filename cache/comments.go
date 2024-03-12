@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"html/template"
 	"net/url"
-	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -61,7 +60,7 @@ func (c *Cache) fetchComments(cli *hb.Client, postID int) error {
 			page,
 			limit,
 			postID,
-			hb.CommentSortTypeOld,
+			hb.CommentSortTypeHot,
 		)
 		if err != nil || views == nil {
 			return fmt.Errorf(
@@ -98,16 +97,15 @@ func (c *Cache) fetchComments(cli *hb.Client, postID int) error {
 		page += 1
 	}
 
-	c.comments.set(postID, sortComments(tree(all), hb.CommentSortTypeTop))
+	c.comments.set(postID, (tree(all)))
 	return nil
 }
 
 func tree(all Comments) Comments {
 	root := new(Comment)
-	for _, comment := range all {
-		root.addChild(comment)
-	}
+	root.addAll(all, 1)
 
+	// Return a slice of comments instead of a root node.
 	var roots Comments
 	for _, child := range root.Children {
 		roots = append(roots, child)
@@ -115,46 +113,70 @@ func tree(all Comments) Comments {
 	return roots
 }
 
-func (parent *Comment) addChild(child *Comment) {
-	var id int
+// addAll attempts to recursively all given child comments to the parent comment.
+//
+// The list is not sorted by parents, instead, any children which were not
+// added in the first round are repeated until they can be added.
+// This _could_ take a very long time in theory, but in practice it normally
+// takes 1-5 iterations with each iteration being smaller than the previous.
+//
+// If more than 50 iterations would take place the process is cancelled and
+// whatever remaining problem comments are dropped. These comments probably did
+// not have a parent.
+//
+// This approach means we do not need to re-sort the comments after insertion.
+func (parent *Comment) addAll(children []*Comment, iteration int) int {
+	// Prevent an out of control stack overflow.
+	if iteration > 50 {
+		return iteration
+	}
+
+	var missing []*Comment
+	for _, child := range children {
+		found := parent.addChild(child)
+		if !found {
+			missing = append(missing, child)
+		}
+	}
+
+	if len(missing) > 0 {
+		parent.addAll(missing, iteration+1)
+	}
+	return iteration
+}
+
+// addChild attempts to add a comment to a tree rooted at parent.
+// The tree will be traversed to find the appropriate parent. The success of
+// this operation is returned: if the parent could be found.
+func (parent *Comment) addChild(child *Comment) bool {
+	var parentID int
 	path := strings.Split(child.Path, ".")
 	if len(path) > 1 {
 		var err error
-		id, err = strconv.Atoi(path[len(path)-2])
+		parentID, err = strconv.Atoi(path[len(path)-2])
 		if err != nil {
-			return
+			// This should never happen! The comment's path is malformed so we
+			// silently drop the comment returning success.
+			return true
 		}
 	}
 
-	if id == parent.ID {
+	// Is this comment a child of the current parent?
+	if parentID == parent.ID {
 		parent.Children = append(parent.Children, child)
+		return true
 	}
 
+	// The comment is a child of a different parent.
+	// Recursively call addChild on all siblings.
 	for _, c := range parent.Children {
-		c.addChild(child)
-	}
-}
-
-type byUpvotes Comments
-
-func (b byUpvotes) Len() int           { return len(b) }
-func (b byUpvotes) Swap(i, j int)      { b[i], b[j] = b[j], b[i] }
-func (b byUpvotes) Less(i, j int) bool { return b[i].Upvotes > b[j].Upvotes }
-
-func sortComments(comments Comments, method hb.CommentSortType) Comments {
-	switch method {
-	case hb.CommentSortTypeTop:
-		sort.Sort(byUpvotes(comments))
-	default:
-		return comments
-	}
-	for _, comment := range comments {
-		if len(comment.Children) != 0 {
-			children := sortComments(comment.Children, method)
-			comment.Children = children
+		if c.addChild(child) {
+			return true
 		}
 	}
-	return comments
+
+	// The comment's parent was not found in the tree.
+	return false
 }
 
 func (c *Cache) processMarkdown(s string) (template.HTML, error) {
