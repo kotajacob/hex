@@ -18,6 +18,7 @@ type Cache struct {
 
 	markdown      goldmark.Markdown
 	emojiReplacer *strings.Replacer
+	linkReplacer  *strings.Replacer
 
 	// home is a mapping of page ids to lists of posts.
 	home homeCache
@@ -179,6 +180,7 @@ func Initialize(
 	errLog *log.Logger,
 	markdown goldmark.Markdown,
 	emojiReplacer *strings.Replacer,
+	linkReplacer *strings.Replacer,
 ) (*Cache, error) {
 	c := new(Cache)
 	c.infoLog = infoLog
@@ -192,6 +194,7 @@ func Initialize(
 
 	c.markdown = markdown
 	c.emojiReplacer = emojiReplacer
+	c.linkReplacer = linkReplacer
 
 	err := c.fetchCommunities(cli)
 	if err != nil {

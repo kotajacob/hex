@@ -15,6 +15,11 @@ import (
 	"github.com/yuin/goldmark/extension"
 )
 
+// DOMAIN is the domain name this server is assumed to be hosted under.
+// It's only really used for replacing hexbear links within the site.
+// It can be overwritten with a launch flag.
+const DOMAIN = "https://diethex.net"
+
 type application struct {
 	infoLog *log.Logger
 	errLog  *log.Logger
@@ -32,6 +37,7 @@ type application struct {
 func main() {
 	addr := flag.String("addr", ":4000", "HTTP network address")
 	hbURL := flag.String("hb", hb.BaseURL, "hexbear baseURL")
+	domain := flag.String("domain", DOMAIN, "domain name for link replacement")
 	flag.Parse()
 
 	infoLog := log.New(os.Stdout, "INFO ", log.Ldate|log.Ltime)
@@ -56,6 +62,7 @@ func main() {
 	)
 
 	emojiReplacer := strings.NewReplacer(files.Emojis()...)
+	linkReplacer := newLinkReplacer(*domain)
 
 	cli, err := hb.NewClient(*hbURL, debugLog)
 	if err != nil {
@@ -64,7 +71,14 @@ func main() {
 			err,
 		)
 	}
-	cache, err := cache.Initialize(cli, infoLog, errLog, markdown, emojiReplacer)
+	cache, err := cache.Initialize(
+		cli,
+		infoLog,
+		errLog,
+		markdown,
+		emojiReplacer,
+		linkReplacer,
+	)
 	if err != nil {
 		errLog.Fatalf(
 			"failed populating initial cache %v",

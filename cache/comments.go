@@ -189,5 +189,7 @@ func (c *Cache) processMarkdown(s string) (template.HTML, error) {
 	); err != nil {
 		return html, err
 	}
-	return template.HTML(c.emojiReplacer.Replace(buf.String())), nil
+	return template.HTML(
+		c.linkReplacer.Replace(c.emojiReplacer.Replace(buf.String())),
+	), nil
 }
