@@ -32,6 +32,9 @@ type Cache struct {
 
 	// comments is a mapping of post IDs to the root comments for that post.
 	comments commentCache
+
+	// persons is a mapping of usernames to information about that person.
+	persons personCache
 }
 
 type homeCache struct {
@@ -144,6 +147,31 @@ func (c commentCache) set(id int, comments Comments) {
 	c.mutex.Unlock()
 }
 
+type personCache struct {
+	mutex *sync.RWMutex
+	cache map[string]Person
+}
+
+func newPersonCache() personCache {
+	var c personCache
+	c.mutex = new(sync.RWMutex)
+	c.cache = make(map[string]Person)
+	return c
+}
+
+func (c personCache) get(name string) (Person, bool) {
+	c.mutex.RLock()
+	persons, ok := c.cache[name]
+	c.mutex.RUnlock()
+	return persons, ok
+}
+
+func (c personCache) set(name string, persons Person) {
+	c.mutex.Lock()
+	c.cache[name] = persons
+	c.mutex.Unlock()
+}
+
 // Initialize the cache and populate the communities and home page.
 func Initialize(
 	cli *hb.Client,
@@ -160,6 +188,7 @@ func Initialize(
 	c.communities = newCommunityCache()
 	c.posts = newPostCache()
 	c.comments = newCommentCache()
+	c.persons = newPersonCache()
 
 	c.markdown = markdown
 	c.emojiReplacer = emojiReplacer

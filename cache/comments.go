@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"html/template"
-	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -189,18 +188,4 @@ func (c *Cache) processMarkdown(s string) (template.HTML, error) {
 		return html, err
 	}
 	return template.HTML(c.emojiReplacer.Replace(buf.String())), nil
-}
-
-func processCreatorName(person hb.Person) string {
-	if person.Local {
-		if person.DisplayName != "" {
-			return person.DisplayName
-		}
-		return person.Name
-	}
-	u, err := url.Parse(person.ActorID)
-	if err != nil {
-		return person.Name
-	}
-	return person.Name + "@" + u.Hostname()
 }

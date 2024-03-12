@@ -54,11 +54,7 @@ func (c *Cache) fetchPost(cli *hb.Client, postID int) error {
 
 	pr, resp, err := cli.Post(context.Background(), postID)
 	if err != nil || pr == nil {
-		return fmt.Errorf(
-			"failing fetching post: %v resp: %v",
-			err,
-			resp,
-		)
+		return fmt.Errorf("failing fetching post: %v resp: %v", err, resp)
 	}
 
 	err = c.storePost(pr.PostView)

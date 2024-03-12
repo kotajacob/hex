@@ -29,12 +29,12 @@ func Timestamp(i interface{}) template.HTML {
 			b.WriteString("<time title=\"")
 			b.WriteString(v.Updated.String())
 			b.WriteString("\">")
-			b.WriteString(Since(*v.Updated, time.Now()))
+			b.WriteString(Since(*v.Updated))
 		} else {
 			b.WriteString("<time title=\"")
 			b.WriteString(v.Published.String())
 			b.WriteString("\">")
-			b.WriteString(Since(v.Published, time.Now()))
+			b.WriteString(Since(v.Published))
 		}
 		b.WriteString("</time>")
 		return template.HTML(b.String())
@@ -44,12 +44,12 @@ func Timestamp(i interface{}) template.HTML {
 			b.WriteString("<time title=\"")
 			b.WriteString(v.Updated.String())
 			b.WriteString("\">")
-			b.WriteString(Since(*v.Updated, time.Now()))
+			b.WriteString(Since(*v.Updated))
 		} else {
 			b.WriteString("<time title=\"")
 			b.WriteString(v.Published.String())
 			b.WriteString("\">")
-			b.WriteString(Since(v.Published, time.Now()))
+			b.WriteString(Since(v.Published))
 		}
 		b.WriteString("</time>")
 		return template.HTML(b.String())
@@ -59,12 +59,12 @@ func Timestamp(i interface{}) template.HTML {
 			b.WriteString("<time title=\"")
 			b.WriteString(v.Updated.String())
 			b.WriteString("\">")
-			b.WriteString(Since(*v.Updated, time.Now()))
+			b.WriteString(Since(*v.Updated))
 		} else {
 			b.WriteString("<time title=\"")
 			b.WriteString(v.Published.String())
 			b.WriteString("\">")
-			b.WriteString(Since(v.Published, time.Now()))
+			b.WriteString(Since(v.Published))
 		}
 		b.WriteString("</time>")
 		return template.HTML(b.String())
@@ -73,8 +73,8 @@ func Timestamp(i interface{}) template.HTML {
 	}
 }
 
-func Since(start, end time.Time) string {
-	elapsed := end.Sub(time.Time(start))
+func Since(start time.Time) string {
+	elapsed := time.Now().Sub(time.Time(start))
 	years := int(math.Floor(elapsed.Hours() / 24 / 365))
 	days := int(math.Floor(elapsed.Hours() / 24))
 	hours := int(math.Floor(elapsed.Hours()))
@@ -94,4 +94,8 @@ func Since(start, end time.Time) string {
 	default:
 		return "0 seconds ago"
 	}
+}
+
+func Date(t time.Time) string {
+	return t.Format("January 2, 2006")
 }

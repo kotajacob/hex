@@ -1,0 +1,26 @@
+{{define "main"}}
+	<header>
+		<h1><a href="/">diet hexbear</a></h1>
+		<aside>{{ .Name }}</aside>
+		{{ if .Bio }}<aside>{{ .Bio }}</aside>{{ end }}
+		<aside>{{ .CommentCount }} comments - {{ .PostCount }} posts</aside>
+		<aside>Joined {{ Since .Created }} on {{ Date .Created }}.</aside>
+	</header>
+	<hr>
+	<main>
+		<div class="stack">
+		{{ range .Posts }}
+			<div class="post">
+				<span class="links">
+					<a href="{{if .URL}}{{.URL}}{{else}}/post/{{.ID}}{{end}}">{{.Name}}</a>
+					<a href="/post/{{.ID}}">[talk]</a>
+				</span>
+				<small>
+				{{.Upvotes}} bears {{.CommentCount}} comments by <a href="/u/{{.CreatorName}}">
+						{{.CreatorName}}</a> {{Timestamp .}} in <a href="/c/{{.CommunityName}}">{{.CommunityName}}</a>
+				</small>
+			</div>
+		{{ end }}
+		</div>
+	</main>
+{{end}}

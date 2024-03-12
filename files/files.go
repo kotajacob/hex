@@ -38,6 +38,8 @@ func Templates() (map[string]*template.Template, error) {
 				"Increment": display.Increment,
 				"Decrement": display.Decrement,
 				"Timestamp": display.Timestamp,
+				"Since":     display.Since,
+				"Date":      display.Date,
 			}).
 			ParseFS(EFS, files...)
 		if err != nil {

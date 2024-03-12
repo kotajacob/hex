@@ -8,6 +8,7 @@ import (
 	"io/fs"
 	"net/http"
 	"strconv"
+	"time"
 
 	"git.sr.ht/~kota/hex/cache"
 	"git.sr.ht/~kota/hex/files"
@@ -29,6 +30,7 @@ func (app *application) routes() http.Handler {
 	router.HandlerFunc(http.MethodGet, "/", app.home)
 	router.HandlerFunc(http.MethodGet, "/post/:id", app.post)
 	router.HandlerFunc(http.MethodGet, "/c/:name", app.community)
+	router.HandlerFunc(http.MethodGet, "/u/:name", app.user)
 	router.HandlerFunc(http.MethodGet, "/communities", app.communities)
 	router.HandlerFunc(http.MethodGet, "/ppb", app.ppb)
 	return app.recoverPanic(app.logRequest(app.secureHeaders(router)))
@@ -154,9 +156,47 @@ func (app *application) community(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-type communitiesPage struct {
-	CSPNonce    string
-	Communities []cache.Community
+type userPage struct {
+	CSPNonce     string
+	Name         string
+	Bio          string
+	CommentCount int
+	PostCount    int
+	Created      time.Time
+
+	Posts []cache.Post
+}
+
+// user handles displaying information for a specific user.
+func (app *application) user(w http.ResponseWriter, r *http.Request) {
+	params := httprouter.ParamsFromContext(r.Context())
+	name := params.ByName("name")
+	user, err := app.cache.Person(app.client, name)
+	if err != nil {
+		app.clientError(w, http.StatusNotFound) // TODO: Handle server errors vs notFound error.
+		return
+	}
+
+	var posts []cache.Post
+	for _, id := range user.PostIDs {
+		p, err := app.cache.Post(app.client, id)
+		if err != nil {
+			app.serverError(w, err)
+			return
+		}
+		posts = append(posts, p)
+	}
+
+	app.render(w, http.StatusOK, "user.tmpl", userPage{
+		CSPNonce:     app.cspNonce,
+		Name:         user.DisplayName,
+		Bio:          user.Bio,
+		CommentCount: user.CommentCount,
+		PostCount:    user.PostCount,
+		Created:      user.Published,
+
+		Posts: posts,
+	})
 }
 
 type postPage struct {
@@ -193,8 +233,9 @@ func (app *application) post(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// emoji handles requests for displaying an emoji.
-func (app *application) emoji(w http.ResponseWriter, r *http.Request) {
+type communitiesPage struct {
+	CSPNonce    string
+	Communities []cache.Community
 }
 
 // communities handles displaying the community list page.
