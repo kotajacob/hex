@@ -10,6 +10,12 @@ import (
 	"git.sr.ht/~kota/hex/hb"
 )
 
+const (
+	POSTS_PER_PAGE = 50 // 50 seems to be the max we can request.
+	PAGE_TTL       = time.Minute * 20
+	POST_TTL       = time.Minute * 20
+)
+
 type Post struct {
 	ID          int    `json:"id"`
 	Name        string `json:"name"`
@@ -32,7 +38,7 @@ type Post struct {
 // they are fetched. If the post is fetched its comments are also fetched.
 func (c *Cache) Post(cli *hb.Client, id int) (Post, error) {
 	post, ok := c.posts.get(id)
-	if !ok || expired(post.Fetched, time.Minute*20) {
+	if !ok || expired(post.Fetched, POST_TTL) {
 		err := c.fetchPost(cli, id)
 		if err != nil {
 			return post, err
@@ -66,9 +72,9 @@ func (c *Cache) fetchPost(cli *hb.Client, postID int) error {
 // The cached version is returned if it exists and has not expired, otherwise,
 // they are fetched fresh. If the posts are fetched their comments are NOT
 // fetched.
-func (c *Cache) Home(cli *hb.Client, page int) (HomePage, error) {
+func (c *Cache) Home(cli *hb.Client, page int) (Page, error) {
 	home, ok := c.home.get(page)
-	if ok && !expired(home.Fetched, time.Minute*20) {
+	if ok && !expired(home.Fetched, PAGE_TTL) {
 		return home, nil
 	}
 	err := c.fetchHome(cli, page)
@@ -81,8 +87,8 @@ func (c *Cache) fetchHome(cli *hb.Client, page int) error {
 	c.infoLog.Println("fetching home posts page:", page)
 	now := time.Now()
 
-	limit := 50 // 50 seems to be the max we can request.
-	home := HomePage{
+	limit := POSTS_PER_PAGE
+	home := Page{
 		Fetched: now,
 	}
 	views, resp, err := cli.PostList(
@@ -103,11 +109,87 @@ func (c *Cache) fetchHome(cli *hb.Client, page int) error {
 	}
 
 	for _, view := range views.Posts {
-		c.storePost(view)
+		err = c.storePost(view)
+		if err != nil {
+			c.errLog.Println("failed to add post", view.Post.ID, err)
+		}
 		home.PostIDs = append(home.PostIDs, view.Post.ID)
 	}
 
 	c.home.set(page, home)
+	return nil
+}
+
+// CommunityPosts returns a page of posts within a community.
+// The cached version is returned if it exists and has not expired, otherwise,
+// they are fetched fresh. If the posts are fetched their comments are NOT
+// fetched.
+func (c *Cache) CommunityPosts(
+	cli *hb.Client,
+	communityName string,
+	pageNum int,
+) (Page, error) {
+	community, ok := c.communities.get(communityName)
+	if !ok {
+		err := c.fetchCommunities(cli)
+		if err != nil {
+		}
+		community, _ = c.communities.get(communityName)
+	}
+
+	page, ok := community.get(pageNum)
+	if ok && !expired(page.Fetched, PAGE_TTL) {
+		return page, nil
+	}
+	err := c.fetchCommunityPosts(cli, communityName, pageNum)
+	page, _ = community.get(pageNum)
+	return page, err
+}
+
+// fetchCommunityPosts retrieves all of the posts for a given page of a community.
+func (c *Cache) fetchCommunityPosts(
+	cli *hb.Client,
+	communityName string,
+	pageNum int,
+) error {
+	community, ok := c.communities.get(communityName)
+	if !ok {
+		return fmt.Errorf("requested community %v does not exist", communityName)
+	}
+	c.infoLog.Printf("fetching %v posts page: %v\n", community.Name, pageNum)
+	now := time.Now()
+
+	limit := POSTS_PER_PAGE
+	page := Page{
+		Fetched: now,
+	}
+	views, resp, err := cli.PostList(
+		context.Background(),
+		community.ID,
+		pageNum,
+		limit,
+		hb.SortTypeActive,
+		hb.ListingTypeLocal,
+	)
+	if err != nil || views == nil {
+		return fmt.Errorf(
+			"failing fetching %v posts page: %v: err %v: resp: %v",
+			community.Name,
+			pageNum,
+			err,
+			resp,
+		)
+	}
+
+	for _, view := range views.Posts {
+		err = c.storePost(view)
+		if err != nil {
+			c.errLog.Println("failed to add post", view.Post.ID, err)
+		}
+		page.PostIDs = append(page.PostIDs, view.Post.ID)
+	}
+
+	community.set(pageNum, page)
 	return nil
 }
 

@@ -3,6 +3,7 @@ package cache
 import (
 	"context"
 	"fmt"
+	"sync"
 	"time"
 
 	"git.sr.ht/~kota/hex/hb"
@@ -14,44 +15,60 @@ type Community struct {
 	Title       string `json:"title"`
 	Description string `json:"description"`
 
+	// pages contains all the posts on a particular page for a Community.
+	mutex *sync.RWMutex
+	pages map[int]Page
+}
+
+// get attempts to get a page from the mapping of pages in a community.
+func (c Community) get(num int) (Page, bool) {
+	c.mutex.RLock()
+	page, ok := c.pages[num]
+	c.mutex.RUnlock()
+	return page, ok
+}
+
+// set attempts to store a page in a community's page mapping.
+func (c Community) set(num int, page Page) {
+	c.mutex.Lock()
+	c.pages[num] = page
+	c.mutex.Unlock()
+}
+
+// A Page contains all the posts on a particular page.
+type Page struct {
 	PostIDs []int
 	Fetched time.Time
 }
 
-// HomePage represents all the posts on a particular page number of the Home
-// view.
-type HomePage struct {
-	PostIDs []int
-	Fetched time.Time
-}
-
-// Community returns a community.
+// Community returns a Community by name.
 // The cached version is returned if it exists, otherwise, all communities are
 // fetched and updated.
-func (c *Cache) Community(cli *hb.Client, id int) (Community, error) {
-	comm, ok := c.communities.get(id)
+// This does not fetch posts within this community.
+func (c *Cache) Community(cli *hb.Client, name string) (Community, error) {
+	comm, ok := c.communities.get(name)
 	if ok {
 		return comm, nil
 	}
 
 	err := c.fetchCommunities(cli)
-	if err != nil {
-		return comm, err
+	comm, ok = c.communities.get(name)
+	if !ok && err == nil {
+		err = fmt.Errorf("community %v does not exist", name)
 	}
-
-	comm, _ = c.communities.get(id)
-	return comm, nil
+	return comm, err
 }
 
 // Communities returns a list of all cached communities.
+// This does not fetch posts within these communities.
 func (c *Cache) Communities() ([]Community, error) {
 	return c.communities.getAll(), nil
 }
 
 // fetchCommunities retrieves all local hexbear communities.
+// This does not fetch posts within these communities.
 func (c *Cache) fetchCommunities(cli *hb.Client) error {
 	c.infoLog.Println("fetching communities")
-	now := time.Now()
 
 	page := 1
 	limit := 50 // 50 seems to be the max we can request.
@@ -73,13 +90,14 @@ func (c *Cache) fetchCommunities(cli *hb.Client) error {
 			break
 		}
 		for _, view := range views.Communities {
-			c.communities.set(view.Community.ID, Community{
+			c.communities.set(view.Community.Name, Community{
 				ID:          view.Community.ID,
 				Name:        view.Community.Name,
 				Title:       view.Community.Title,
 				Description: view.Community.Description,
 
-				Fetched: now,
+				pages: make(map[int]Page),
+				mutex: new(sync.RWMutex),
 			})
 		}
 		if len(views.Communities) < limit {

@@ -13,14 +13,18 @@ import (
 // The Cache is used to serve all requests. When available and fresh cached
 // data is used, but fresh data will be fetched as needed.
 type Cache struct {
-	infoLog       *log.Logger
+	infoLog *log.Logger
+	errLog  *log.Logger
+
 	markdown      goldmark.Markdown
 	emojiReplacer *strings.Replacer
 
-	// home is a page numbers to lists of posts on the homepage.
+	// home is a mapping of page ids to lists of posts.
 	home homeCache
 
-	// communities is a mapping of community IDs to the data representing them.
+	// communities is a mapping of community names to information about that
+	// community.
+	// The communities themselves contain a mapping of pages to lists of posts.
 	communities communityCache
 
 	// posts is a mapping of post IDs to the data representing them.
@@ -32,24 +36,24 @@ type Cache struct {
 
 type homeCache struct {
 	mutex *sync.RWMutex
-	cache map[int]HomePage
+	cache map[int]Page
 }
 
 func newHomeCache() homeCache {
 	var c homeCache
 	c.mutex = new(sync.RWMutex)
-	c.cache = make(map[int]HomePage)
+	c.cache = make(map[int]Page)
 	return c
 }
 
-func (c homeCache) get(id int) (HomePage, bool) {
+func (c homeCache) get(id int) (Page, bool) {
 	c.mutex.RLock()
 	home, ok := c.cache[id]
 	c.mutex.RUnlock()
 	return home, ok
 }
 
-func (c homeCache) set(id int, home HomePage) {
+func (c homeCache) set(id int, home Page) {
 	c.mutex.Lock()
 	c.cache[id] = home
 	c.mutex.Unlock()
@@ -57,19 +61,19 @@ func (c homeCache) set(id int, home HomePage) {
 
 type communityCache struct {
 	mutex *sync.RWMutex
-	cache map[int]Community
+	cache map[string]Community
 }
 
 func newCommunityCache() communityCache {
 	var c communityCache
 	c.mutex = new(sync.RWMutex)
-	c.cache = make(map[int]Community)
+	c.cache = make(map[string]Community)
 	return c
 }
 
-func (c communityCache) get(id int) (Community, bool) {
+func (c communityCache) get(name string) (Community, bool) {
 	c.mutex.RLock()
-	community, ok := c.cache[id]
+	community, ok := c.cache[name]
 	c.mutex.RUnlock()
 	return community, ok
 }
@@ -84,9 +88,9 @@ func (c communityCache) getAll() []Community {
 	return cms
 }
 
-func (c communityCache) set(id int, community Community) {
+func (c communityCache) set(name string, community Community) {
 	c.mutex.Lock()
-	c.cache[id] = community
+	c.cache[name] = community
 	c.mutex.Unlock()
 }
 
@@ -144,15 +148,19 @@ func (c commentCache) set(id int, comments Comments) {
 func Initialize(
 	cli *hb.Client,
 	infoLog *log.Logger,
+	errLog *log.Logger,
 	markdown goldmark.Markdown,
 	emojiReplacer *strings.Replacer,
 ) (*Cache, error) {
 	c := new(Cache)
+	c.infoLog = infoLog
+	c.errLog = errLog
+
 	c.home = newHomeCache()
 	c.communities = newCommunityCache()
 	c.posts = newPostCache()
 	c.comments = newCommentCache()
-	c.infoLog = infoLog
+
 	c.markdown = markdown
 	c.emojiReplacer = emojiReplacer
 

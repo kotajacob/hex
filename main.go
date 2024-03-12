@@ -64,7 +64,7 @@ func main() {
 			err,
 		)
 	}
-	cache, err := cache.Initialize(cli, infoLog, markdown, emojiReplacer)
+	cache, err := cache.Initialize(cli, infoLog, errLog, markdown, emojiReplacer)
 	if err != nil {
 		errLog.Fatalf(
 			"failed populating initial cache %v",
