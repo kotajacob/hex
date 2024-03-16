@@ -1,11 +1,16 @@
 #!/sbin/openrc-run
+supervisor=supervise-daemon
 
+name="hex"
 description="hex"
+
 command=${command:-/usr/bin/hex}
 command_background=true
+command_user="hex:hex"
+
 pidfile="/run/${RC_SVCNAME}.pid"
-output_log="/var/log/hex.log"
-error_log="/var/log/hex.err"
+output_log="/var/log/hex/hex.log"
+error_log="/var/log/hex/hex.err"
 
 depend() {
 	need net
