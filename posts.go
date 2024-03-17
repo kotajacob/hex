@@ -38,6 +38,6 @@ func (app *application) post(w http.ResponseWriter, r *http.Request) {
 	app.render(w, http.StatusOK, "post.tmpl", postPage{
 		CSPNonce: app.cspNonce,
 		Post:     post,
-		Comments: comments,
+		Comments: comments.Comments,
 	})
 }

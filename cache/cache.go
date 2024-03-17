@@ -125,24 +125,24 @@ func (c postCache) set(id int, post Post) {
 
 type commentCache struct {
 	mutex *sync.RWMutex
-	cache map[int]Comments
+	cache map[int]PostComments
 }
 
 func newCommentCache() commentCache {
 	var c commentCache
 	c.mutex = new(sync.RWMutex)
-	c.cache = make(map[int]Comments)
+	c.cache = make(map[int]PostComments)
 	return c
 }
 
-func (c commentCache) get(id int) (Comments, bool) {
+func (c commentCache) get(id int) (PostComments, bool) {
 	c.mutex.RLock()
 	comments, ok := c.cache[id]
 	c.mutex.RUnlock()
 	return comments, ok
 }
 
-func (c commentCache) set(id int, comments Comments) {
+func (c commentCache) set(id int, comments PostComments) {
 	c.mutex.Lock()
 	c.cache[id] = comments
 	c.mutex.Unlock()

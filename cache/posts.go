@@ -12,8 +12,8 @@ import (
 
 const (
 	POSTS_PER_PAGE = 50 // 50 seems to be the max we can request.
-	PAGE_TTL       = time.Minute * 20
-	POST_TTL       = time.Minute * 20
+	PAGE_TTL       = time.Minute * 15
+	POST_TTL       = time.Minute * 15
 )
 
 type Post struct {
@@ -36,7 +36,7 @@ type Post struct {
 
 // Post returns a given post.
 // The cached version is returned if it exists and has not expired, otherwise,
-// they are fetched. If the post is fetched its comments are also fetched.
+// they are fetched.
 func (c *Cache) Post(cli *hb.Client, id int) (Post, error) {
 	post, ok := c.posts.get(id)
 	if !ok || expired(post.Fetched, POST_TTL) {
@@ -58,11 +58,7 @@ func (c *Cache) fetchPost(cli *hb.Client, postID int) error {
 		return fmt.Errorf("failing fetching post: %v resp: %v", err, resp)
 	}
 
-	err = c.storePost(pr.PostView)
-	if err != nil {
-		return err
-	}
-	return c.fetchComments(cli, postID)
+	return c.storePost(pr.PostView)
 }
 
 // Home returns the home page.

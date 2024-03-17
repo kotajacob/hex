@@ -27,23 +27,24 @@ type Comment struct {
 
 type Comments []*Comment
 
+type PostComments struct {
+	Fetched  time.Time
+	Comments Comments
+}
+
 // Comments returns the comments associated with a given post.
-// The cached version is returned if it exists, otherwise, they are fetched.
-// There is no cache expiration. Calling the Post method will check the
-// expiration of both the post and its comments, updating the cache as needed.
-// It should be called before this method.
-func (c *Cache) Comments(cli *hb.Client, postID int) (Comments, error) {
+// The cached version is returned if it exists and has not expired, otherwise,
+// they are fetched.
+func (c *Cache) Comments(cli *hb.Client, postID int) (PostComments, error) {
 	comments, ok := c.comments.get(postID)
-	if ok {
-		return comments, nil
+	if !ok || expired(comments.Fetched, POST_TTL) {
+		err := c.fetchComments(cli, postID)
+		if err != nil {
+			return comments, err
+		}
+		comments, _ = c.comments.get(postID)
 	}
 
-	err := c.fetchComments(cli, postID)
-	if err != nil {
-		return comments, err
-	}
-
-	comments, _ = c.comments.get(postID)
 	return comments, nil
 }
 
@@ -98,7 +99,10 @@ func (c *Cache) fetchComments(cli *hb.Client, postID int) error {
 		page += 1
 	}
 
-	c.comments.set(postID, (tree(all)))
+	c.comments.set(postID, PostComments{
+		Fetched:  time.Now(),
+		Comments: tree(all),
+	})
 	return nil
 }
 
