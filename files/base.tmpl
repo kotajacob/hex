@@ -124,9 +124,17 @@
 		border-inline-start: var(--s-4) solid var(--color-fg-light);
 		background-color: var(--color-bg-light);
 	}
+	pre {
+		overflow: auto;
+		padding: var(--s-2);
+		background-color: var(--color-bg-light);
+	}
 	@media (prefers-color-scheme: dark) {
 		blockquote {
 			border-inline-start: var(--s-4) solid var(--color-dark-fg-light);
+			background-color: var(--color-dark-bg-light);
+		}
+		pre {
 			background-color: var(--color-dark-bg-light);
 		}
 	}
