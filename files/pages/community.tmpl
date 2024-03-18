@@ -3,9 +3,9 @@
 		<h1><a href="/">diet hexbear</a></h1>
 		<aside>{{ .Name }}</aside>
 		<aside class="navigation">
-			{{if gt .Page 1}}<a href="/?page={{Decrement .Page}}">prev</a>{{end}}
+			{{if gt .Page 1}}<a href="/c/{{ .Name }}/?page={{Decrement .Page}}">prev</a>{{end}}
 			<a href="/communities">communities</a>
-			<a href="/?page={{Increment .Page}}">next</a>
+			<a href="/c/{{ .Name }}/?page={{Increment .Page}}">next</a>
 		</aside>
 	</header>
 	<hr>
@@ -28,8 +28,8 @@
 	<hr>
 	<footer>
 		<aside class="navigation">
-			{{if gt .Page 1}}<a href="/?page={{Decrement .Page}}">prev</a>{{end}}
-				<a href="/?page={{Increment .Page}}">next</a>
+			{{if gt .Page 1}}<a href="/c/{{ .Name }}/?page={{Decrement .Page}}">prev</a>{{end}}
+				<a href="/c/{{ .Name }}/?page={{Increment .Page}}">next</a>
 		</aside>
 	</footer>
 {{end}}
