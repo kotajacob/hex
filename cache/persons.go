@@ -98,5 +98,9 @@ func processCreatorName(person hb.Person) string {
 }
 
 func processCreatorURL(person hb.Person) string {
-	return "/u/" + person.Name
+	u, err := url.Parse(person.ActorID)
+	if err != nil || person.Local {
+		return "/u/" + person.Name
+	}
+	return u.String()
 }
