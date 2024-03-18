@@ -28,6 +28,7 @@ func (app *application) routes() http.Handler {
 	router.HandlerFunc(http.MethodGet, "/u/:name", app.user)
 	router.HandlerFunc(http.MethodGet, "/communities", app.communities)
 	router.HandlerFunc(http.MethodGet, "/ppb", app.ppb)
+	router.HandlerFunc(http.MethodGet, "/robots.txt", app.robots)
 	return app.recoverPanic(app.logRequest(app.secureHeaders(router)))
 }
 
@@ -59,7 +60,7 @@ func (app *application) render(
 
 // ppb does exactly what you'd expect.
 func (app *application) ppb(w http.ResponseWriter, r *http.Request) {
-	f, err := files.EFS.Open("images/ppb.jpg")
+	f, err := files.EFS.Open("static/ppb.jpg")
 	if err != nil {
 		app.serverError(w, fmt.Errorf("failed to open ppb.jpg: %v", err))
 		return
@@ -67,6 +68,20 @@ func (app *application) ppb(w http.ResponseWriter, r *http.Request) {
 	data, err := io.ReadAll(f)
 	if err != nil {
 		app.serverError(w, fmt.Errorf("failed to read ppb.jpg: %v", err))
+		return
+	}
+	w.Write(data)
+}
+
+func (app *application) robots(w http.ResponseWriter, r *http.Request) {
+	f, err := files.EFS.Open("static/robots.txt")
+	if err != nil {
+		app.serverError(w, fmt.Errorf("failed to open robots.txt: %v", err))
+		return
+	}
+	data, err := io.ReadAll(f)
+	if err != nil {
+		app.serverError(w, fmt.Errorf("failed to read robots.txt: %v", err))
 		return
 	}
 	w.Write(data)
