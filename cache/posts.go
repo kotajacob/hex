@@ -17,13 +17,15 @@ const (
 )
 
 type Post struct {
-	ID          int    `json:"id"`
-	Name        string `json:"name"`
-	URL         string `json:"url"`
-	Body        template.HTML
-	CommunityID int        `json:"community_id"`
-	Published   time.Time  `json:"published"`
-	Updated     *time.Time `json:"updated"`
+	ID                int    `json:"id"`
+	Name              string `json:"name"`
+	URL               string `json:"url"`
+	Body              template.HTML
+	CommunityID       int        `json:"community_id"`
+	Published         time.Time  `json:"published"`
+	Updated           *time.Time `json:"updated"`
+	FeaturedLocal     bool       `json:"featured_local"`
+	FeaturedCommunity bool       `json:"featured_community"`
 
 	CreatorDisplayName string
 	CreatorURL         string
@@ -201,13 +203,15 @@ func (c *Cache) storePost(view hb.PostView) error {
 	}
 
 	c.posts.set(view.Post.ID, Post{
-		ID:          view.Post.ID,
-		Name:        view.Post.Name,
-		URL:         url,
-		Body:        body,
-		CommunityID: view.Post.CommunityID,
-		Published:   view.Post.Published,
-		Updated:     view.Post.Updated,
+		ID:                view.Post.ID,
+		Name:              view.Post.Name,
+		URL:               url,
+		Body:              body,
+		CommunityID:       view.Post.CommunityID,
+		Published:         view.Post.Published,
+		Updated:           view.Post.Updated,
+		FeaturedLocal:     view.Post.FeaturedLocal,
+		FeaturedCommunity: view.Post.FeaturedCommunity,
 
 		CreatorDisplayName: processCreatorName(view.Creator),
 		CreatorURL:         processCreatorURL(view.Creator),

@@ -9,15 +9,16 @@ import (
 
 // Post is a single post.
 type Post struct {
-	ID          int        `json:"id"`
-	Local       bool       `json:"local"`
-	Name        string     `json:"name"`
-	URL         string     `json:"url"`
-	Body        string     `json:"body"`
-	CommunityID int        `json:"community_id"`
-	Published   time.Time  `json:"published"`
-	Updated     *time.Time `json:"updated"`
-	CreatorID   int        `json:"creator_id"`
+	ID                int        `json:"id"`
+	Local             bool       `json:"local"`
+	Name              string     `json:"name"`
+	URL               string     `json:"url"`
+	Body              string     `json:"body"`
+	CommunityID       int        `json:"community_id"`
+	Published         time.Time  `json:"published"`
+	Updated           *time.Time `json:"updated"`
+	FeaturedLocal     bool       `json:"featured_local"`
+	FeaturedCommunity bool       `json:"featured_community"`
 }
 
 // PostAggregates is aggregated scores for a post.

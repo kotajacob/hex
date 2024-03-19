@@ -14,7 +14,7 @@
 		{{ range .Posts }}
 			<div class="post">
 				<span class="links">
-					<a href="{{if .URL}}{{.URL}}{{else}}/post/{{.ID}}{{end}}">{{.Name}}</a>
+					<a href="{{if .URL}}{{.URL}}{{else}}/post/{{.ID}}{{end}}">{{.Name}}{{if .FeaturedCommunity}} 🖈{{end}}</a>
 					<a href="/post/{{.ID}}">[talk]</a>
 				</span>
 				<small>
