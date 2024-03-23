@@ -14,7 +14,6 @@ type Person struct {
 	Name        string    `json:"name"`
 	DisplayName string    `json:"display_name"`
 	Bio         string    `json:"bio"`
-	Admin       bool      `json:"admin"`
 	Local       bool      `json:"local"`
 	Published   time.Time `json:"published"`
 	Updated     time.Time `json:"updated"`
@@ -23,16 +22,15 @@ type Person struct {
 // PersonAggregates is aggregated scores for a person.
 type PersonAggregates struct {
 	CommentCount int `json:"comment_count"`
-	CommentScore int `json:"comment_score"`
 	PostCount    int `json:"post_count"`
-	PostScore    int `json:"post_score"`
 }
 
 // PersonView represents a Person along with some aggregate information about
 // them.
 type PersonView struct {
-	Counts PersonAggregates `json:"counts"`
-	Person Person           `json:"person"`
+	Counts  PersonAggregates `json:"counts"`
+	Person  Person           `json:"person"`
+	IsAdmin bool             `json:"is_admin"`
 }
 
 // PersonResp is the response from Person.

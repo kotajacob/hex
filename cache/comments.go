@@ -88,7 +88,7 @@ func (c *Cache) fetchComments(cli *hb.Client, postID int) error {
 				Published: view.Comment.Published,
 				Updated:   view.Comment.Updated,
 
-				CreatorDisplayName: processCreatorName(view.Creator),
+				CreatorDisplayName: processCreatorName(view.Creator, view.CreatorIsAdmin),
 				CreatorURL:         processCreatorURL(view.Creator),
 				Upvotes:            view.Counts.Upvotes,
 			})

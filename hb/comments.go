@@ -27,11 +27,13 @@ type CommentAggregates struct {
 }
 
 type CommentView struct {
-	Comment   Comment           `json:"comment"`
-	Community Community         `json:"community"`
-	Counts    CommentAggregates `json:"counts"`
-	Creator   Person            `json:"creator"`
-	Post      Post              `json:"post"`
+	Comment            Comment           `json:"comment"`
+	Community          Community         `json:"community"`
+	Counts             CommentAggregates `json:"counts"`
+	Post               Post              `json:"post"`
+	Creator            Person            `json:"creator"`
+	CreatorIsAdmin     bool              `json:"creator_is_admin"`
+	CreatorIsModerator bool              `json:"creator_is_moderator"`
 }
 
 type CommentListResp struct {

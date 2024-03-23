@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"html/template"
 	"net/url"
+	"strings"
 	"time"
 
 	"git.sr.ht/~kota/hex/hb"
@@ -18,6 +19,7 @@ type Person struct {
 	DisplayName string        `json:"display_name"`
 	Bio         template.HTML `json:"bio"`
 	Local       bool          `json:"local"`
+	Admin       bool          `json:"admin"`
 	Published   time.Time     `json:"published"`
 	Updated     time.Time     `json:"updated"`
 
@@ -69,9 +71,10 @@ func (c *Cache) fetchPerson(cli *hb.Client, name string) error {
 	c.persons.set(name, Person{
 		ActorID:     pr.PersonView.Person.ActorID,
 		Name:        pr.PersonView.Person.Name,
-		DisplayName: processCreatorName(pr.PersonView.Person),
+		DisplayName: processCreatorName(pr.PersonView.Person, pr.PersonView.IsAdmin),
 		Bio:         bio,
 		Local:       pr.PersonView.Person.Local,
+		Admin:       pr.PersonView.IsAdmin,
 		Published:   pr.PersonView.Person.Published,
 		Updated:     pr.PersonView.Person.Updated,
 
@@ -83,18 +86,27 @@ func (c *Cache) fetchPerson(cli *hb.Client, name string) error {
 	return nil
 }
 
-func processCreatorName(person hb.Person) string {
+func processCreatorName(person hb.Person, admin bool) string {
+	var s strings.Builder
 	if person.Local {
 		if person.DisplayName != "" {
-			return person.DisplayName
+			s.WriteString(person.DisplayName)
+		} else {
+			s.WriteString(person.Name)
 		}
-		return person.Name
+	} else {
+		u, err := url.Parse(person.ActorID)
+		if err != nil {
+			s.WriteString(person.Name)
+		} else {
+			s.WriteString(person.Name + "@" + u.Hostname())
+		}
 	}
-	u, err := url.Parse(person.ActorID)
-	if err != nil {
-		return person.Name
+
+	if admin {
+		s.WriteString(" [A]")
 	}
-	return person.Name + "@" + u.Hostname()
+	return s.String()
 }
 
 func processCreatorURL(person hb.Person) string {

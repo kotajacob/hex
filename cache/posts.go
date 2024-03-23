@@ -213,7 +213,7 @@ func (c *Cache) storePost(view hb.PostView) error {
 		FeaturedLocal:     view.Post.FeaturedLocal,
 		FeaturedCommunity: view.Post.FeaturedCommunity,
 
-		CreatorDisplayName: processCreatorName(view.Creator),
+		CreatorDisplayName: processCreatorName(view.Creator, view.CreatorIsAdmin),
 		CreatorURL:         processCreatorURL(view.Creator),
 		CommunityName:      view.Community.Name,
 		Image:              image,
