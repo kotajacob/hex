@@ -19,7 +19,6 @@ type Person struct {
 	DisplayName string        `json:"display_name"`
 	Bio         template.HTML `json:"bio"`
 	Local       bool          `json:"local"`
-	Admin       bool          `json:"admin"`
 	Published   time.Time     `json:"published"`
 	Updated     time.Time     `json:"updated"`
 
@@ -69,14 +68,18 @@ func (c *Cache) fetchPerson(cli *hb.Client, name string) error {
 	}
 
 	c.persons.set(name, Person{
-		ActorID:     pr.PersonView.Person.ActorID,
-		Name:        pr.PersonView.Person.Name,
-		DisplayName: processCreatorName(pr.PersonView.Person, pr.PersonView.IsAdmin),
-		Bio:         bio,
-		Local:       pr.PersonView.Person.Local,
-		Admin:       pr.PersonView.IsAdmin,
-		Published:   pr.PersonView.Person.Published,
-		Updated:     pr.PersonView.Person.Updated,
+		ActorID: pr.PersonView.Person.ActorID,
+		Name:    pr.PersonView.Person.Name,
+		DisplayName: processPersonName(
+			pr.PersonView.Person,
+			pr.PersonView.IsAdmin,
+			false, // No concept of moderator on a person view page.
+			false, // No concept of OP on a person view page.
+		),
+		Bio:       bio,
+		Local:     pr.PersonView.Person.Local,
+		Published: pr.PersonView.Person.Published,
+		Updated:   pr.PersonView.Person.Updated,
 
 		CommentCount: pr.PersonView.Counts.CommentCount,
 		PostCount:    pr.PersonView.Counts.PostCount,
@@ -86,7 +89,15 @@ func (c *Cache) fetchPerson(cli *hb.Client, name string) error {
 	return nil
 }
 
-func processCreatorName(person hb.Person, admin bool) string {
+// processPersonName creates a DisplayName to store in cache for a person.
+// Pronouns are displayed, then an [A] for admins, an [M] for mods, and [OP] to
+// signify if the given user created the post being viewed. Remote users will
+// instead have name@homeserver.
+//
+// In some contexts, such as a post listing, there is no concept of [OP], or on
+// a person's page there's no concept of moderators. In these cases false
+// should be passed for those booleans.
+func processPersonName(person hb.Person, admin, mod, op bool) string {
 	var s strings.Builder
 	if person.Local {
 		if person.DisplayName != "" {
@@ -106,10 +117,18 @@ func processCreatorName(person hb.Person, admin bool) string {
 	if admin {
 		s.WriteString(" [A]")
 	}
+
+	if mod {
+		s.WriteString(" [M]")
+	}
+
+	if op {
+		s.WriteString(" [OP]")
+	}
 	return s.String()
 }
 
-func processCreatorURL(person hb.Person) string {
+func processPersonURL(person hb.Person) string {
 	u, err := url.Parse(person.ActorID)
 	if err != nil || person.Local {
 		return "/u/" + person.Name

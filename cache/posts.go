@@ -28,6 +28,7 @@ type Post struct {
 	FeaturedCommunity bool       `json:"featured_community"`
 
 	CreatorDisplayName string
+	CreatorID          int
 	CreatorURL         string
 	CommunityName      string
 	Image              string
@@ -213,13 +214,19 @@ func (c *Cache) storePost(view hb.PostView) error {
 		FeaturedLocal:     view.Post.FeaturedLocal,
 		FeaturedCommunity: view.Post.FeaturedCommunity,
 
-		CreatorDisplayName: processCreatorName(view.Creator, view.CreatorIsAdmin),
-		CreatorURL:         processCreatorURL(view.Creator),
-		CommunityName:      view.Community.Name,
-		Image:              image,
-		Upvotes:            view.Counts.Upvotes,
-		CommentCount:       view.Counts.Comments,
-		Fetched:            time.Now(),
+		CreatorDisplayName: processPersonName(
+			view.Creator,
+			view.CreatorIsAdmin,
+			view.CreatorIsModerator,
+			false, // No need to mark them as OP when it's obvious.
+		),
+		CreatorID:     view.Creator.ID,
+		CreatorURL:    processPersonURL(view.Creator),
+		CommunityName: view.Community.Name,
+		Image:         image,
+		Upvotes:       view.Counts.Upvotes,
+		CommentCount:  view.Counts.Comments,
+		Fetched:       time.Now(),
 	})
 	return nil
 }

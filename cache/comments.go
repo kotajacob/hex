@@ -35,10 +35,19 @@ type PostComments struct {
 // Comments returns the comments associated with a given post.
 // The cached version is returned if it exists and has not expired, otherwise,
 // they are fetched.
+//
+// The post in question is looked up in order to retrieve the post's creator
+// and be able to correctly mark comments as being created by the OP.
 func (c *Cache) Comments(cli *hb.Client, postID int) (PostComments, error) {
+	var comments PostComments
+	post, err := c.Post(cli, postID)
+	if err != nil {
+		return comments, err
+	}
+
 	comments, ok := c.comments.get(postID)
 	if !ok || expired(comments.Fetched, POST_TTL) {
-		err := c.fetchComments(cli, postID)
+		err := c.fetchComments(cli, postID, post.CreatorID)
 		if err != nil {
 			return comments, err
 		}
@@ -50,7 +59,8 @@ func (c *Cache) Comments(cli *hb.Client, postID int) (PostComments, error) {
 
 // fetchComments retrieves all comments for a post making as many requests as
 // needed.
-func (c *Cache) fetchComments(cli *hb.Client, postID int) error {
+// The creatorID is used to mark the creator as OP in their comments.
+func (c *Cache) fetchComments(cli *hb.Client, postID, postCreatorID int) error {
 	c.infoLog.Println("fetching comments for post:", postID)
 	var all Comments
 	page := 1
@@ -88,9 +98,14 @@ func (c *Cache) fetchComments(cli *hb.Client, postID int) error {
 				Published: view.Comment.Published,
 				Updated:   view.Comment.Updated,
 
-				CreatorDisplayName: processCreatorName(view.Creator, view.CreatorIsAdmin),
-				CreatorURL:         processCreatorURL(view.Creator),
-				Upvotes:            view.Counts.Upvotes,
+				CreatorDisplayName: processPersonName(
+					view.Creator,
+					view.CreatorIsAdmin,
+					view.CreatorIsModerator,
+					postCreatorID == view.Creator.ID,
+				),
+				CreatorURL: processPersonURL(view.Creator),
+				Upvotes:    view.Counts.Upvotes,
 			})
 		}
 		if len(views.Comments) < limit {
