@@ -27,6 +27,6 @@ run:
 	go run .
 
 watch:
-	fd -e go -e tmpl | entr -rs "go run ."
+	fd -e go -e tmpl | entr -rcs "go run ."
 
 .PHONY: all hex install uninstall clean run watch
