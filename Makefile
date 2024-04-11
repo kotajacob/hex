@@ -24,7 +24,7 @@ clean:
 	$(RM) hex
 
 run:
-	go run .
+	go run -race .
 
 watch:
 	fd -e go -e tmpl | entr -rcs "go run ."
