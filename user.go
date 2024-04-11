@@ -41,7 +41,7 @@ func (app *application) user(w http.ResponseWriter, r *http.Request) {
 	}
 
 	app.render(w, http.StatusOK, "user.tmpl", userPage{
-		CSPNonce:     app.cspNonce,
+		CSPNonce:     nonce(r.Context()),
 		Name:         user.DisplayName,
 		Bio:          user.Bio,
 		CommentCount: user.CommentCount,

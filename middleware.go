@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
@@ -15,6 +16,8 @@ func cspNonce() (string, error) {
 }
 
 // secureHeaders is a middleware which adds strict CSP and other headers.
+// A CSP nonce is stored in the request's context which can be retrieved with
+// the nonce helper function.
 func (app *application) secureHeaders(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		nonce, err := cspNonce()
@@ -32,10 +35,18 @@ func (app *application) secureHeaders(next http.Handler) http.Handler {
 		w.Header().Set("X-Content-Type-Options", "nosniff")
 		w.Header().Set("X-Frame-Options", "deny")
 		w.Header().Set("X-XSS-Protection", "0")
-		app.cspNonce = nonce
+		r = r.WithContext(context.WithValue(r.Context(), "nonce", nonce))
 
 		next.ServeHTTP(w, r)
 	})
+}
+
+// nonce retrieves a stored nonce string from a request's context.
+func nonce(c context.Context) string {
+	if val, ok := c.Value("nonce").(string); ok {
+		return val
+	}
+	return ""
 }
 
 // logRequest is a middleware that prints each request to the info log.

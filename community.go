@@ -52,7 +52,7 @@ func (app *application) community(w http.ResponseWriter, r *http.Request) {
 	}
 
 	app.render(w, http.StatusOK, "community.tmpl", communityPage{
-		CSPNonce: app.cspNonce,
+		CSPNonce: nonce(r.Context()),
 		Name:     community.Name,
 		Page:     pageNum,
 		Posts:    posts,
@@ -72,7 +72,7 @@ func (app *application) communities(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	app.render(w, http.StatusOK, "communities.tmpl", communitiesPage{
-		CSPNonce:    app.cspNonce,
+		CSPNonce:    nonce(r.Context()),
 		Communities: cms,
 	})
 }

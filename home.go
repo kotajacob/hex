@@ -45,7 +45,7 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	}
 
 	app.render(w, http.StatusOK, "home.tmpl", homePage{
-		CSPNonce: app.cspNonce,
+		CSPNonce: nonce(r.Context()),
 		MOTD:     hb.GetMOTD(),
 		Page:     pageNum,
 		Posts:    posts,
