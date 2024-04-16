@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"git.sr.ht/~kota/hex/cache"
+	"git.sr.ht/~kota/hex/hb"
 	"github.com/julienschmidt/httprouter"
 )
 
@@ -13,6 +14,7 @@ type communityPage struct {
 	Name     string
 	Page     int
 	Posts    []cache.Post
+	Sort     string
 }
 
 // community handles displaying the lists of posts for a specific community.
@@ -27,6 +29,7 @@ func (app *application) community(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
+	sort := hb.ParseSortType(q.Get("sort"))
 
 	params := httprouter.ParamsFromContext(r.Context())
 	name := params.ByName("name")
@@ -36,7 +39,7 @@ func (app *application) community(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	page, err := app.cache.CommunityPosts(app.client, name, pageNum)
+	page, err := app.cache.CommunityPosts(app.client, name, pageNum, sort)
 	if err != nil {
 		app.serverError(w, err)
 		return
@@ -56,6 +59,7 @@ func (app *application) community(w http.ResponseWriter, r *http.Request) {
 		Name:     community.Name,
 		Page:     pageNum,
 		Posts:    posts,
+		Sort:     string(sort),
 	})
 }
 

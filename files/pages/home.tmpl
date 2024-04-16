@@ -7,6 +7,7 @@
 			<a href="/communities">communities</a>
 			<a href="/?page={{Increment .Page}}">next</a>
 		</aside>
+		{{template "sort" .}}
 	</header>
 	<hr>
 	<main>
@@ -32,4 +33,10 @@
 				<a href="/?page={{Increment .Page}}">next</a>
 		</aside>
 	</footer>
+	<script nonce="{{.CSPNonce}}">
+	const sorter = document.getElementById("sort");
+	sorter.addEventListener('change', () => {
+		sorter.form.submit();
+	})
+	</script>
 {{end}}

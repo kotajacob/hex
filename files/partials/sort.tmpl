@@ -1,0 +1,24 @@
+{{define "sort"}}
+<form class="sort">
+	<label  for="sort">Sort:</label>
+	<select id="sort" name="sort">
+		<option {{if eq .Sort "Active"}}selected {{end}}value="active">active</option>
+		<option {{if eq .Sort "Hot"}}selected {{end}}value="hot">hot</option>
+		<option {{if eq .Sort "New"}}selected {{end}}value="new">new</option>
+		<option {{if eq .Sort "Old"}}selected {{end}}value="old">old</option>
+		<option {{if eq .Sort "TopDay"}}selected {{end}}value="topday">topday</option>
+		<option {{if eq .Sort "TopWeek"}}selected {{end}}value="topweek">topweek</option>
+		<option {{if eq .Sort "TopMonth"}}selected {{end}}value="topmonth">topmonth</option>
+		<option {{if eq .Sort "TopYear"}}selected {{end}}value="topyear">topyear</option>
+		<option {{if eq .Sort "TopAll"}}selected {{end}}value="topall">topall</option>
+		<option {{if eq .Sort "MostComments"}}selected {{end}}value="mostcomments">mostcomments</option>
+		<option {{if eq .Sort "NewComments"}}selected {{end}}value="newcomments">newcomments</option>
+		<option {{if eq .Sort "TopHour"}}selected {{end}}value="tophour">tophour</option>
+		<option {{if eq .Sort "TopSixHour"}}selected {{end}}value="topsixhour">topsixhour</option>
+		<option {{if eq .Sort "TopTwelveHour"}}selected {{end}}value="toptwelvehour">toptwelvehour</option>
+		<option {{if eq .Sort "TopThreeMonths"}}selected {{end}}value="topthreemonths">topthreemonths</option>
+		<option {{if eq .Sort "TopSixMonths"}}selected {{end}}value="topsixmonths">topsixmonths</option>
+		<option {{if eq .Sort "TopNineMonths"}}selected {{end}}value="topninemonths">topninemonths</option>
+	</select>
+</form>
+{{end}}

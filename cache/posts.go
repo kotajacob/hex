@@ -68,18 +68,18 @@ func (c *Cache) fetchPost(cli *hb.Client, postID int) error {
 // The cached version is returned if it exists and has not expired, otherwise,
 // they are fetched fresh. If the posts are fetched their comments are NOT
 // fetched.
-func (c *Cache) Home(cli *hb.Client, page int) (Page, error) {
-	home, ok := c.home.get(page)
+func (c *Cache) Home(cli *hb.Client, page int, sort hb.SortType) (Page, error) {
+	home, ok := c.home.get(page, sort)
 	if ok && !expired(home.Fetched, PAGE_TTL) {
 		return home, nil
 	}
-	err := c.fetchHome(cli, page)
-	home, _ = c.home.get(page)
+	err := c.fetchHome(cli, page, sort)
+	home, _ = c.home.get(page, sort)
 	return home, err
 }
 
 // fetchHome retrieves all of the posts needed for the home page.
-func (c *Cache) fetchHome(cli *hb.Client, page int) error {
+func (c *Cache) fetchHome(cli *hb.Client, page int, sort hb.SortType) error {
 	c.infoLog.Println("fetching home posts page:", page)
 	now := time.Now()
 
@@ -92,7 +92,7 @@ func (c *Cache) fetchHome(cli *hb.Client, page int) error {
 		0,
 		page,
 		limit,
-		hb.SortTypeActive,
+		sort,
 		hb.ListingTypeLocal,
 	)
 	if err != nil || views == nil {
@@ -112,7 +112,7 @@ func (c *Cache) fetchHome(cli *hb.Client, page int) error {
 		home.PostIDs = append(home.PostIDs, view.Post.ID)
 	}
 
-	c.home.set(page, home)
+	c.home.set(page, sort, home)
 	return nil
 }
 
@@ -124,6 +124,7 @@ func (c *Cache) CommunityPosts(
 	cli *hb.Client,
 	communityName string,
 	pageNum int,
+	sort hb.SortType,
 ) (Page, error) {
 	community, ok := c.communities.get(communityName)
 	if !ok {
@@ -133,12 +134,12 @@ func (c *Cache) CommunityPosts(
 		community, _ = c.communities.get(communityName)
 	}
 
-	page, ok := community.get(pageNum)
+	page, ok := community.get(pageNum, sort)
 	if ok && !expired(page.Fetched, PAGE_TTL) {
 		return page, nil
 	}
-	err := c.fetchCommunityPosts(cli, communityName, pageNum)
-	page, _ = community.get(pageNum)
+	err := c.fetchCommunityPosts(cli, communityName, pageNum, sort)
+	page, _ = community.get(pageNum, sort)
 	return page, err
 }
 
@@ -147,6 +148,7 @@ func (c *Cache) fetchCommunityPosts(
 	cli *hb.Client,
 	communityName string,
 	pageNum int,
+	sort hb.SortType,
 ) error {
 	community, ok := c.communities.get(communityName)
 	if !ok {
@@ -164,7 +166,7 @@ func (c *Cache) fetchCommunityPosts(
 		community.ID,
 		pageNum,
 		limit,
-		hb.SortTypeActive,
+		sort,
 		hb.ListingTypeLocal,
 	)
 	if err != nil || views == nil {
@@ -185,7 +187,7 @@ func (c *Cache) fetchCommunityPosts(
 		page.PostIDs = append(page.PostIDs, view.Post.ID)
 	}
 
-	community.set(pageNum, page)
+	community.set(pageNum, sort, page)
 	return nil
 }
 

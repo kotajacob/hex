@@ -19,6 +19,15 @@
 			{{if .Post.Body}}
 			<article>{{.Post.Body}}</article>
 			{{end}}
+			<form class="sort">
+				<label  for="sort">Sort:</label>
+				<select id="sort" name="sort">
+					<option {{if eq .CommentSort "Hot"}}selected {{end}}value="hot">Hot</option>
+					<option {{if eq .CommentSort "Top"}}selected {{end}}value="top">Top</option>
+					<option {{if eq .CommentSort "New"}}selected {{end}}value="new">New</option>
+					<option {{if eq .CommentSort "Old"}}selected {{end}}value="old">Old</option>
+				</select>
+			</form>
 			<hr>
 			<ol class="comments">
 				{{range .Comments}}
@@ -28,6 +37,11 @@
 		</div>
 	</main>
 	<script nonce="{{.CSPNonce}}">
+	const sorter = document.getElementById("sort");
+	sorter.addEventListener('change', () => {
+		sorter.form.submit();
+	})
+
 	const folders = document.getElementsByClassName("comment-folder");
 	function fold(label) {
 		const comment = label.parentElement.parentElement;
@@ -71,13 +85,13 @@
 		comment.addEventListener('touchstart', e => {
 			touchstartX = e.changedTouches[0].screenX;
 			touchstartY = e.changedTouches[0].screenY;
-		})
+		}, {passive: true})
 
 		comment.addEventListener('touchend', e => {
 			touchendX = e.changedTouches[0].screenX;
 			touchendY = e.changedTouches[0].screenY;
 			checkDirection(e);
-		})
+		}, {passive: true})
 	}
 	</script>
 {{end}}

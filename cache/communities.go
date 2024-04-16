@@ -3,6 +3,7 @@ package cache
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"sync"
 	"time"
 
@@ -17,21 +18,23 @@ type Community struct {
 
 	// pages contains all the posts on a particular page for a Community.
 	mutex *sync.RWMutex
-	pages map[int]Page
+	pages map[string]Page
 }
 
 // get attempts to get a page from the mapping of pages in a community.
-func (c Community) get(num int) (Page, bool) {
+func (c Community) get(num int, sort hb.SortType) (Page, bool) {
 	c.mutex.RLock()
-	page, ok := c.pages[num]
+	key := strconv.Itoa(num) + ":" + string(sort)
+	page, ok := c.pages[key]
 	c.mutex.RUnlock()
 	return page, ok
 }
 
 // set attempts to store a page in a community's page mapping.
-func (c Community) set(num int, page Page) {
+func (c Community) set(num int, sort hb.SortType, page Page) {
 	c.mutex.Lock()
-	c.pages[num] = page
+	key := strconv.Itoa(num) + ":" + string(sort)
+	c.pages[key] = page
 	c.mutex.Unlock()
 }
 
@@ -96,7 +99,7 @@ func (c *Cache) fetchCommunities(cli *hb.Client) error {
 				Title:       view.Community.Title,
 				Description: view.Community.Description,
 
-				pages: make(map[int]Page),
+				pages: make(map[string]Page),
 				mutex: new(sync.RWMutex),
 			})
 		}

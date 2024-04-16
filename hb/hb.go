@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"strings"
 )
 
 // BaseURL is the default URL for the hexbear API.
@@ -119,6 +120,48 @@ const (
 	SortTypeTopNineMonths  SortType = "TopNineMonths"
 )
 
+func ParseSortType(s string) SortType {
+	s = strings.ToLower(s)
+	switch s {
+	case "active":
+		return SortTypeActive
+	case "hot":
+		return SortTypeHot
+	case "new":
+		return SortTypeNew
+	case "old":
+		return SortTypeOld
+	case "topday":
+		return SortTypeTopDay
+	case "topweek":
+		return SortTypeTopWeek
+	case "topmonth":
+		return SortTypeTopMonth
+	case "topyear":
+		return SortTypeTopYear
+	case "topall":
+		return SortTypeTopAll
+	case "mostcomments":
+		return SortTypeMostComments
+	case "newcomments":
+		return SortTypeNewComments
+	case "tophour":
+		return SortTypeTopHour
+	case "topsixhour":
+		return SortTypeTopSixHour
+	case "toptwelvehour":
+		return SortTypeTopTwelveHour
+	case "topthreemonths":
+		return SortTypeTopThreeMonths
+	case "topsixmonths":
+		return SortTypeTopSixMonths
+	case "topninemonths":
+		return SortTypeTopNineMonths
+	default:
+		return SortTypeActive
+	}
+}
+
 // CommentSortType is used when requesting sorted comments.
 type CommentSortType string
 
@@ -128,3 +171,19 @@ const (
 	CommentSortTypeNew CommentSortType = "New"
 	CommentSortTypeOld CommentSortType = "Old"
 )
+
+func ParseCommentSortType(s string) CommentSortType {
+	s = strings.ToLower(s)
+	switch s {
+	case "hot":
+		return CommentSortTypeHot
+	case "top":
+		return CommentSortTypeTop
+	case "new":
+		return CommentSortTypeNew
+	case "old":
+		return CommentSortTypeOld
+	default:
+		return CommentSortTypeHot
+	}
+}

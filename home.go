@@ -14,6 +14,7 @@ type homePage struct {
 	MOTD     template.HTML
 	Page     int
 	Posts    []cache.Post
+	Sort     string
 }
 
 // home handles displaying the home page.
@@ -28,8 +29,9 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
+	sort := hb.ParseSortType(q.Get("sort"))
 
-	page, err := app.cache.Home(app.client, pageNum)
+	page, err := app.cache.Home(app.client, pageNum, sort)
 	if err != nil {
 		app.serverError(w, err)
 		return
@@ -49,5 +51,6 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 		MOTD:     hb.GetMOTD(),
 		Page:     pageNum,
 		Posts:    posts,
+		Sort:     string(sort),
 	})
 }

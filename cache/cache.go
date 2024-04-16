@@ -2,6 +2,7 @@ package cache
 
 import (
 	"log"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -20,7 +21,7 @@ type Cache struct {
 	emojiReplacer *strings.Replacer
 	linkReplacer  *strings.Replacer
 
-	// home is a mapping of page ids to lists of posts.
+	// home is a mapping of page_number:sorting_method to lists of posts.
 	home homeCache
 
 	// communities is a mapping of community names to information about that
@@ -31,7 +32,8 @@ type Cache struct {
 	// posts is a mapping of post IDs to the data representing them.
 	posts postCache
 
-	// comments is a mapping of post IDs to the root comments for that post.
+	// comments is a mapping of post_IDs:sorting_method to the root comments
+	// for that post.
 	comments commentCache
 
 	// persons is a mapping of usernames to information about that person.
@@ -40,26 +42,28 @@ type Cache struct {
 
 type homeCache struct {
 	mutex *sync.RWMutex
-	cache map[int]Page
+	cache map[string]Page
 }
 
 func newHomeCache() homeCache {
 	var c homeCache
 	c.mutex = new(sync.RWMutex)
-	c.cache = make(map[int]Page)
+	c.cache = make(map[string]Page)
 	return c
 }
 
-func (c homeCache) get(id int) (Page, bool) {
+func (c homeCache) get(num int, sort hb.SortType) (Page, bool) {
 	c.mutex.RLock()
-	home, ok := c.cache[id]
+	key := strconv.Itoa(num) + ":" + string(sort)
+	home, ok := c.cache[key]
 	c.mutex.RUnlock()
 	return home, ok
 }
 
-func (c homeCache) set(id int, home Page) {
+func (c homeCache) set(num int, sort hb.SortType, home Page) {
 	c.mutex.Lock()
-	c.cache[id] = home
+	key := strconv.Itoa(num) + ":" + string(sort)
+	c.cache[key] = home
 	c.mutex.Unlock()
 }
 
@@ -125,26 +129,28 @@ func (c postCache) set(id int, post Post) {
 
 type commentCache struct {
 	mutex *sync.RWMutex
-	cache map[int]PostComments
+	cache map[string]PostComments
 }
 
 func newCommentCache() commentCache {
 	var c commentCache
 	c.mutex = new(sync.RWMutex)
-	c.cache = make(map[int]PostComments)
+	c.cache = make(map[string]PostComments)
 	return c
 }
 
-func (c commentCache) get(id int) (PostComments, bool) {
+func (c commentCache) get(id int, sort hb.CommentSortType) (PostComments, bool) {
 	c.mutex.RLock()
-	comments, ok := c.cache[id]
+	key := strconv.Itoa(id) + ":" + string(sort)
+	comments, ok := c.cache[key]
 	c.mutex.RUnlock()
 	return comments, ok
 }
 
-func (c commentCache) set(id int, comments PostComments) {
+func (c commentCache) set(id int, sort hb.CommentSortType, comments PostComments) {
 	c.mutex.Lock()
-	c.cache[id] = comments
+	key := strconv.Itoa(id) + ":" + string(sort)
+	c.cache[key] = comments
 	c.mutex.Unlock()
 }
 
@@ -201,7 +207,7 @@ func Initialize(
 		return nil, err
 	}
 
-	err = c.fetchHome(cli, 1)
+	err = c.fetchHome(cli, 1, hb.SortTypeActive)
 	if err != nil {
 		return nil, err
 	}

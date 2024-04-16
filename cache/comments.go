@@ -38,20 +38,24 @@ type PostComments struct {
 //
 // The post in question is looked up in order to retrieve the post's creator
 // and be able to correctly mark comments as being created by the OP.
-func (c *Cache) Comments(cli *hb.Client, postID int) (PostComments, error) {
+func (c *Cache) Comments(
+	cli *hb.Client,
+	postID int,
+	sort hb.CommentSortType,
+) (PostComments, error) {
 	var comments PostComments
 	post, err := c.Post(cli, postID)
 	if err != nil {
 		return comments, err
 	}
 
-	comments, ok := c.comments.get(postID)
+	comments, ok := c.comments.get(postID, sort)
 	if !ok || expired(comments.Fetched, POST_TTL) {
-		err := c.fetchComments(cli, postID, post.CreatorID)
+		err := c.fetchComments(cli, postID, sort, post.CreatorID)
 		if err != nil {
 			return comments, err
 		}
-		comments, _ = c.comments.get(postID)
+		comments, _ = c.comments.get(postID, sort)
 	}
 
 	return comments, nil
@@ -60,7 +64,12 @@ func (c *Cache) Comments(cli *hb.Client, postID int) (PostComments, error) {
 // fetchComments retrieves all comments for a post making as many requests as
 // needed.
 // The creatorID is used to mark the creator as OP in their comments.
-func (c *Cache) fetchComments(cli *hb.Client, postID, postCreatorID int) error {
+func (c *Cache) fetchComments(
+	cli *hb.Client,
+	postID int,
+	sort hb.CommentSortType,
+	postCreatorID int,
+) error {
 	c.infoLog.Println("fetching comments for post:", postID)
 	var all Comments
 	page := 1
@@ -71,7 +80,7 @@ func (c *Cache) fetchComments(cli *hb.Client, postID, postCreatorID int) error {
 			page,
 			limit,
 			postID,
-			hb.CommentSortTypeHot,
+			sort,
 		)
 		if err != nil || views == nil {
 			return fmt.Errorf(
@@ -114,7 +123,7 @@ func (c *Cache) fetchComments(cli *hb.Client, postID, postCreatorID int) error {
 		page += 1
 	}
 
-	c.comments.set(postID, PostComments{
+	c.comments.set(postID, sort, PostComments{
 		Fetched:  time.Now(),
 		Comments: tree(all),
 	})
