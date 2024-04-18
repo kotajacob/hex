@@ -35,8 +35,8 @@ func Templates() (map[string]*template.Template, error) {
 
 		ts, err := template.New(baseTMPL).
 			Funcs(template.FuncMap{
-				"Increment": display.Increment,
-				"Decrement": display.Decrement,
+				"NextPage":  display.NextPage,
+				"PrevPage":  display.PrevPage,
 				"Timestamp": display.Timestamp,
 				"Since":     display.Since,
 				"Date":      display.Date,

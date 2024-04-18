@@ -3,21 +3,43 @@ package display
 import (
 	"html/template"
 	"math"
+	"net/url"
 	"strconv"
 	"strings"
 	"time"
 
 	"git.sr.ht/~kota/hex/cache"
+	"git.sr.ht/~kota/hex/hb"
 )
 
-// Increment a number by 1.
-func Increment(i int) int {
-	return i + 1
+// NextPage renders a URL for the next page button in a community listing.
+func NextPage(page int, sort string) string {
+	var u url.URL
+	q := u.Query()
+
+	s := hb.ParseSortType(sort)
+	if s != hb.DefaultSortType {
+		q.Add("sort", strings.ToLower(string(s)))
+	}
+
+	q.Add("page", strconv.Itoa(page+1))
+	return "?" + q.Encode()
 }
 
-// Decrement a number by 1.
-func Decrement(i int) int {
-	return i - 1
+// PrevPage renders a URL for the next page button in a community listing.
+func PrevPage(page int, sort string) string {
+	var u url.URL
+	q := u.Query()
+
+	s := hb.ParseSortType(sort)
+	if s != hb.DefaultSortType {
+		q.Add("sort", strings.ToLower(string(s)))
+	}
+
+	if page > 0 {
+		q.Add("page", strconv.Itoa(page-1))
+	}
+	return "?" + q.Encode()
 }
 
 // Timestamp implements a fancy HTML timstamp renderer for the hb types.

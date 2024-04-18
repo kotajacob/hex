@@ -120,6 +120,8 @@ const (
 	SortTypeTopNineMonths  SortType = "TopNineMonths"
 )
 
+const DefaultSortType = SortTypeActive
+
 func ParseSortType(s string) SortType {
 	s = strings.ToLower(s)
 	switch s {
@@ -158,7 +160,7 @@ func ParseSortType(s string) SortType {
 	case "topninemonths":
 		return SortTypeTopNineMonths
 	default:
-		return SortTypeActive
+		return DefaultSortType
 	}
 }
 
@@ -172,6 +174,8 @@ const (
 	CommentSortTypeOld CommentSortType = "Old"
 )
 
+const DefaultCommentSortType = CommentSortTypeHot
+
 func ParseCommentSortType(s string) CommentSortType {
 	s = strings.ToLower(s)
 	switch s {
@@ -184,6 +188,6 @@ func ParseCommentSortType(s string) CommentSortType {
 	case "old":
 		return CommentSortTypeOld
 	default:
-		return CommentSortTypeHot
+		return DefaultCommentSortType
 	}
 }

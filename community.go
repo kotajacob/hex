@@ -1,6 +1,7 @@
 package main
 
 import (
+	"html/template"
 	"net/http"
 	"strconv"
 
@@ -11,7 +12,7 @@ import (
 
 type communityPage struct {
 	CSPNonce string
-	Name     string
+	Message  template.HTML
 	Page     int
 	Posts    []cache.Post
 	Sort     string
@@ -56,7 +57,7 @@ func (app *application) community(w http.ResponseWriter, r *http.Request) {
 
 	app.render(w, http.StatusOK, "community.tmpl", communityPage{
 		CSPNonce: nonce(r.Context()),
-		Name:     community.Name,
+		Message:  template.HTML(community.Name),
 		Page:     pageNum,
 		Posts:    posts,
 		Sort:     string(sort),

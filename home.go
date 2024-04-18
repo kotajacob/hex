@@ -1,21 +1,12 @@
 package main
 
 import (
-	"html/template"
 	"net/http"
 	"strconv"
 
 	"git.sr.ht/~kota/hex/cache"
 	"git.sr.ht/~kota/hex/hb"
 )
-
-type homePage struct {
-	CSPNonce string
-	MOTD     template.HTML
-	Page     int
-	Posts    []cache.Post
-	Sort     string
-}
 
 // home handles displaying the home page.
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
@@ -46,9 +37,9 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 		posts = append(posts, p)
 	}
 
-	app.render(w, http.StatusOK, "home.tmpl", homePage{
+	app.render(w, http.StatusOK, "community.tmpl", communityPage{
 		CSPNonce: nonce(r.Context()),
-		MOTD:     hb.GetMOTD(),
+		Message:  hb.GetMOTD(),
 		Page:     pageNum,
 		Posts:    posts,
 		Sort:     string(sort),
