@@ -109,7 +109,13 @@
 		object-fit: contain;
 	}
 	p > img {
-		padding: var(--s-2);
+		margin: 0 !important;
+	}
+	p:has(img) {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--s0);
+		align-items: center;
 	}
 	img[title^='emoji'] {
 		width: 6ch;
